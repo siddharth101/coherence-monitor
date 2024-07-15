@@ -194,4 +194,11 @@ import plotly
 fig = px.scatter(vals, x="frequency", y="max_correlation", 
                   hover_data=['channel'], color= "group", labels={"max_correlation": "Max Correlation",
                                                                  "frequency":"Frequency [Hz]"})
+fig.update_layout(
+    title=dict(text="Max Coherence during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
+        family="Courier New, monospace",
+        size=18,
+        color="RebeccaPurple")))
+
+
 plotly.offline.plot(fig, filename = 'plots/scatter_coh_{}.png'.format(int(time_)))
