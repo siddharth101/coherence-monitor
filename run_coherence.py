@@ -194,4 +194,4 @@ import plotly
 fig = px.scatter(vals, x="frequency", y="max_correlation", 
                   hover_data=['channel'], color= "group", labels={"max_correlation": "Max Correlation",
                                                                  "frequency":"Frequency [Hz]"})
-plotly.offline.plot(fig, filename = 'scatter_coh_{}.png'.format(int(time_)))
+plotly.offline.plot(fig, filename = 'plots/scatter_coh_{}.png'.format(int(time_)))
