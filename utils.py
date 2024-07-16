@@ -68,11 +68,11 @@ def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, str
     return coh
 
 
-def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, ifo='L1'):
+def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, ifo='L1'):
     
     t1, t2 = to_gps(starttime), to_gps(endtime)
     
-    savedir = '/home/siddharth.soni/O4/coherence_study/coherence_monitor/data/{}/'.format(t1)
+    savedir = os.path.join(savedir, '{}'.format(t1), '')
     if not os.path.exists(savedir):
         os.makedirs(savedir)
     

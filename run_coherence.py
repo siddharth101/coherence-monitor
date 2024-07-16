@@ -5,14 +5,17 @@ import multiprocessing
 import pandas as pd
 import random
 import argparse
+import os
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--date', type=str, help='YYYY-MM-DD')
 parser.add_argument('--ifo', type=str, help='L1 or H1')
+parser.add_argument('--savedir', default=os.curdir, type=str, help='output directory to save data')
 args = parser.parse_args()
 
 t1 = args.date
 ifo = args.ifo
+savedir = args.savedir
 
 date1 = datetime.strptime(t1, '%Y-%m-%d')
 date2 = date1 + timedelta(days=1)
@@ -53,7 +56,7 @@ def get_coherence_asc(channel_list=asc_chans['channel'], ifo=ifo, times=time_, s
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -65,7 +68,7 @@ def get_coherence_sus(channel_list=sus_chans['channel'], first_chan_index=0,
     print("Got {} files".format(len(files_)))
     channel_list = channel_list.iloc[first_chan_index:]
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -76,7 +79,7 @@ def get_coherence_lsc(channel_list=lsc_chans['channel'], ifo=ifo, times=time_, s
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return 
@@ -86,7 +89,7 @@ def get_coherence_pem(channel_list=pem_chans['channel'], ifo=ifo, times=time_, s
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return 
@@ -96,7 +99,7 @@ def get_coherence_hepi(channel_list=hepi_chans['channel'], ifo=ifo, times=time_,
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -106,7 +109,7 @@ def get_coherence_psl_sqz_tcs(channel_list=psl_sqz_tcs_chans['channel'], ifo=ifo
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -117,7 +120,7 @@ def get_coherence_isi(channel_list=isi_chans['channel'], ifo=ifo, times=time_, s
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -127,7 +130,7 @@ def get_coherence_imc(channel_list=imc_chans['channel'], ifo=ifo, times=time_, s
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -137,7 +140,7 @@ def get_coherence_omc(channel_list=omc_chans['channel'], ifo=ifo, times=time_, s
     files_ = get_frame_files(times, times + 900, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(channel_list=channel_list, frame_files = files_, starttime=times, 
-                  endtime=times+900, ifo=ifo, strain_data=ht_data)
+                  endtime=times+900, ifo=ifo, strain_data=ht_data, savedir=savedir)
         
         
     return
@@ -184,7 +187,8 @@ tac = time.time()
 print(tac - tic)
 
 
-file_path = '/home/siddharth.soni/O4/coherence_study/coherence_monitor/data/{}/'.format(int(time_))
+#file_path = '/home/siddharth.soni/O4/coherence_study/coherence_monitor/data/{}/'.format(int(time_))
+file_path = os.path.join(savedir, '{}'.format(int(time_)), '')
 
 vals = get_max_corr(file_path, save=True)
 vals['group'] = vals['channel'].apply(give_group)
