@@ -86,8 +86,7 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
         
     return
                   
-
-def get_max_corr(output_dir, save=False):
+def get_max_corr_band(output_dir,flow=1, fhigh=200, save=False):
     files = glob.glob(output_dir + '*.csv')
     vals = []
     df_vals_ = pd.DataFrame()
@@ -97,7 +96,7 @@ def get_max_corr(output_dir, save=False):
         fs = FrequencySeries.read(i)
         n1, n2 = fs.frequencies.value[0], fs.frequencies.value[1]
         n_diff = n2 - n1
-        ind1, ind2 = int(1/(n_diff)), int(200/(n_diff))
+        ind1, ind2 = int(flow/(n_diff)), int(fhigh/(n_diff))
         
         fs_ = fs[ind1:ind2]
         max_value = fs_.max().value
@@ -111,11 +110,6 @@ def get_max_corr(output_dir, save=False):
         else:
             vals.append(-1)
             
-    
-        
             
-        
     return df_vals_
-
-
-
+        
