@@ -152,6 +152,7 @@ def combine_csv(dir_path):
     all_files = glob.glob(path + "*.csv")
     
     all_files = [i for i in all_files if not i.startswith(path+'L1_OMC_DCPD_SUM_OUT')]
+    all_files = [i for i in all_files if not i.startswith(path+'L1_OMC_DCPD_NULL_OUT')]
     
     
     
