@@ -151,9 +151,12 @@ def combine_csv(dir_path):
     path = dir_path # use your path
     all_files = glob.glob(path + "*.csv")
     
-    all_files = [i for i in all_files if not i.startswith(path+'L1_OMC_DCPD_SUM_OUT')]
-    all_files = [i for i in all_files if not i.startswith(path+'L1_OMC_DCPD_NULL_OUT')]
-    
+    chan_removes = ['H1_OMC_DCPD_SUM_OUT','H1_OMC_DCPD_NULL_OUT', 'H1_LSC_DARM_OUT_DQ',
+                   'H1_LSC_DARM_IN1_DQ', 'H1_LSC_DARM1_IN2_DQ',
+                   'L1_OMC_DCPD_NULL_OUT', 'L1_OMC_DCPD_SUM_OUT']
+    for j in chan_removes:
+        all_files = [i for i in all_files if not i.startswith(path + j)]
+     
     
     
     li = []
@@ -206,6 +209,7 @@ def plot_max_corr_chan(path, fft, ifo):
                   hover_data=['channel1'], color= "group1", labels={"max_correlation": "Max Correlation",
                                                                  "frequency":"Frequency [Hz]"})
     
+    print("Plotting figure 2")
     fig2 = px.scatter(vals, x="frequency", y="corr2", 
                   hover_data=['channel2'], color= "group2", labels={"max_correlation": "Max Correlation",
                                                                  "frequency":"Frequency [Hz]"})
@@ -215,6 +219,7 @@ def plot_max_corr_chan(path, fft, ifo):
         size=18,
         color="RebeccaPurple")))
     
+    print("making figure 2")
     fig2.update_layout(
     title=dict(text="Second highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
         family="Courier New, monospace",
