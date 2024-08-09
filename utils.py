@@ -82,13 +82,14 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
     savedir = os.path.join(savedir, '{}'.format(t1), '')
     if not os.path.exists(savedir):
         os.makedirs(savedir)
-    
+   	
+     
     h_t = '{}:GDS-CALIB_STRAIN'.format(ifo)
     for i in channel_list:
-        print(f"Calculating coherence between DARM and {i}")
+    #    print(f"Calculating coherence between DARM and {i}")
         coh = calc_coherence(strain_data=strain_data,channel1=None,
                              channel2= i, frame_file = frame_files, 
-                             start_time = t1, end_time = t2, fft=10, overlap=6)
+                             start_time = t1, end_time = t2, fft=10, overlap=5)
         coh.write(savedir + i.replace(':', '_').replace('-','_')+'_{}_{}.csv'.format(t1, t2))
         
     return
@@ -174,10 +175,9 @@ def combine_csv(dir_path):
     return frame
 
 def find_max_corr_channel(path,fft=10,ifo='L1'):
+    '''This function gives the top 2 aux channels 
+    at each frequency that have the highest coherence'''
     frame_  = combine_csv(path)
-    
-    #frame_ = frame.iloc[:]
-    
     max_vals = []
     for i in range(len(frame_)):
         max_val_ = frame_.iloc[i,1::2].sort_values(ascending=False)
@@ -195,23 +195,25 @@ def find_max_corr_channel(path,fft=10,ifo='L1'):
         
 
 
-def plot_max_corr_chan(path, fft, ifo):
+def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
+    '''This function plots the channels that have highest and second
+    highest coherence at each frequency between flow and fhigh'''
     
     time_ = int(path.split('/')[-2])
     vals = find_max_corr_channel(path=path, fft=fft, ifo=ifo)
     print("Got the data, now making plots")
-    vals = vals.iloc[:2001] # this would need to incorportate fft information
+    vals = vals.iloc[flow*fft:fhigh*fft+1] # this would need to incorportate fft information
     vals['group1'] = vals['channel1'].apply(give_group_v2)
     vals['group2'] = vals['channel2'].apply(give_group_v2)
 
 
     fig1 = px.scatter(vals, x="frequency", y="corr1", 
-                  hover_data=['channel1'], color= "group1", labels={"max_correlation": "Max Correlation",
+                  hover_data=['channel1'], color= "group1", labels={"max_correlation": "Max Coherence",
                                                                  "frequency":"Frequency [Hz]"})
     
     print("Plotting figure 2")
     fig2 = px.scatter(vals, x="frequency", y="corr2", 
-                  hover_data=['channel2'], color= "group2", labels={"max_correlation": "Max Correlation",
+                  hover_data=['channel2'], color= "group2", labels={"max_correlation": "Max Coherence",
                                                                  "frequency":"Frequency [Hz]"})
     fig1.update_layout(
     title=dict(text="Highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
