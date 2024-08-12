@@ -26,9 +26,6 @@ print('Start loading the *.csv files and doing the plot')
 vals = plot_max_corr_chan(args.savedir, 10, args.ifo)
 
 print('Print sorted list of witness channels to be copied to DeepClean')
-import pdb
-pdb.set_trace()
-
 vals_selc = vals.loc[(vals['frequency']>args.lowfreq) & (vals['frequency']<args.highfreq) & ((vals['corr1']>0.2) | (vals['corr2'] > 0.2))]
 
 channels = []
@@ -40,5 +37,7 @@ for c in channels2:
     if c not in channels1:
         channels.append(c)
 
-for c in channels:
-    print(c[:-26].replace('_','-',1))
+with open('chanlist_o4.ini','w') as f:
+    f.write(args.ifo+':GDS-CALIB_STRAIN\n')
+    for c in channels:
+        f.write(c[:-26].replace('_','-',1)+'\n')
