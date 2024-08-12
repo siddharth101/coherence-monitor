@@ -234,4 +234,4 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
     plotly.offline.plot(fig1, filename = 'plots/channels_coh_{}_a.png'.format(int(time_)))
     plotly.offline.plot(fig2, filename = 'plots/channels_coh_{}_b.png'.format(int(time_)))
     
-    return
+    return vals
