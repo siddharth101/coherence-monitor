@@ -81,8 +81,8 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
     
     savedir = os.path.join(savedir, '{}'.format(t1), '')
     if not os.path.exists(savedir):
+        print("Creating the output dir")
         os.makedirs(savedir)
-   	
      
     h_t = '{}:GDS-CALIB_STRAIN'.format(ifo)
     for i in channel_list:
@@ -154,7 +154,9 @@ def combine_csv(dir_path):
     
     chan_removes = ['H1_OMC_DCPD_SUM_OUT','H1_OMC_DCPD_NULL_OUT', 'H1_LSC_DARM_OUT_DQ',
                    'H1_LSC_DARM_IN1_DQ', 'H1_LSC_DARM1_IN2_DQ',
-                   'L1_OMC_DCPD_NULL_OUT', 'L1_OMC_DCPD_SUM_OUT']
+                   'L1_OMC_DCPD_NULL_OUT', 'L1_OMC_DCPD_SUM_OUT',
+                   'L1:LSC-DARM_IN1_DQ', 'L1:LSC-DARM_IN2_DQ',
+                   'L1:LSC-DARM_OUT_DQ']
     for j in chan_removes:
         all_files = [i for i in all_files if not i.startswith(path + j)]
      
