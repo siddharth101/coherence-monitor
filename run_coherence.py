@@ -1,4 +1,4 @@
-from utils import get_observing_segs, get_times, calc_coherence, run_coherence, get_max_corr, get_frame_files, get_strain_data
+from utils import get_observing_segs, get_times, calc_coherence, run_coherence, get_max_corr, get_frame_files, get_strain_data, get_unsafe_channels
 from gwpy.timeseries import TimeSeries
 from datetime import datetime, timedelta
 import multiprocessing
@@ -42,6 +42,12 @@ if args.date is not None:
     time_ = random.choice(times_segs)
 if args.time is not None:
     time_ = t1
+
+df_unsafe_chans = get_unsafe_channels(ifo)
+print("Total auxiliary channels: {}".format(len(df_all_chans)))
+df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+print("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
+
 
 print("Time is {}".format(time_))
 

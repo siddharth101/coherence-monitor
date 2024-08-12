@@ -30,6 +30,12 @@ def get_frame_files(starttime, endtime, ifo='L1'):
     
     return files 
 
+def get_unsafe_channels(ifo):
+    path = 'channel_files/{}/{}_unsafe_channels.csv'.format(ifo, ifo)
+    
+    df = pd.read_csv(path)
+    
+    return df
 
 def get_observing_segs(t1, t2, ifo='L1'):
     
@@ -148,16 +154,14 @@ def get_max_corr_band(output_dir,flow=10, fhigh=20, save=False):
             
     return df_vals_
 
-def combine_csv(dir_path):
+def combine_csv(dir_path, ifo):
     path = dir_path # use your path
     all_files = glob.glob(path + "*.csv")
     
-    chan_removes = ['H1_OMC_DCPD_SUM_OUT','H1_OMC_DCPD_NULL_OUT', 'H1_LSC_DARM_OUT_DQ',
-                   'H1_LSC_DARM_IN1_DQ', 'H1_LSC_DARM1_IN2_DQ',
-                   'L1_OMC_DCPD_NULL_OUT', 'L1_OMC_DCPD_SUM_OUT',
-                   'L1:LSC-DARM_IN1_DQ', 'L1:LSC-DARM_IN2_DQ',
-                   'L1:LSC-DARM_OUT_DQ']
+    chan_removes = get_unsafe_channels(ifo=ifo)['channel']
+    
     for j in chan_removes:
+        j = j.replace(':','_').replace('-','_')
         all_files = [i for i in all_files if not i.startswith(path + j)]
      
     
@@ -179,7 +183,7 @@ def combine_csv(dir_path):
 def find_max_corr_channel(path,fft=10,ifo='L1'):
     '''This function gives the top 2 aux channels 
     at each frequency that have the highest coherence'''
-    frame_  = combine_csv(path)
+    frame_  = combine_csv(path, ifo)
     max_vals = []
     for i in range(len(frame_)):
         max_val_ = frame_.iloc[i,1::2].sort_values(ascending=False)
