@@ -8,21 +8,28 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--date', type=str, help='YYYY-MM-DD')
+parser.add_argument('--date', type=str, help='YYYY-MM-DD', default=None)
+parser.add_argument('--time', type=float, help='gps time', default=None)
 parser.add_argument('--ifo', type=str, help='L1 or H1')
 parser.add_argument('--dur', type=float, default=1024.0, help='duration of data in secs')
 parser.add_argument('--savedir', default=os.curdir, type=str, help='output directory to save data')
 args = parser.parse_args()
 
-t1 = args.date
+if args.date is not None:
+    t1 = args.date
+    date1 = datetime.strptime(t1, '%Y-%m-%d')
+    date2 = date1 + timedelta(days=1)
+    date2 = date2.strftime('%Y-%m-%d')
+elif args.time is not None:
+    t1 = args.time
+    date1 = t1
+    date2 = t1+86400
+else: 
+    raise Exception("Either date or GPS time needs to be defined!")
+
 ifo = args.ifo
 dur = args.dur
 savedir = args.savedir
-
-date1 = datetime.strptime(t1, '%Y-%m-%d')
-date2 = date1 + timedelta(days=1)
-date2 = date2.strftime('%Y-%m-%d')
-
 
 segs_ = get_observing_segs(date1, date2)
 times_segs = get_times(seglist=segs_)
@@ -31,7 +38,10 @@ channel_path = 'channel_files/{}/'.format(ifo)
 
 df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
 
-time_ = random.choice(times_segs)
+if args.date is not None:
+    time_ = random.choice(times_segs)
+if args.time is not None:
+    time_ = t1
 
 print("Time is {}".format(time_))
 
@@ -77,23 +87,3 @@ tac = time.time()
 print(tac - tic)
 
 
-
-#file_path = '/home/siddharth.soni/O4/coherence_study/coherence_monitor/data/{}/'.format(int(time_))
-#file_path = os.path.join(savedir, '{}'.format(int(time_)), '')
-
-#vals = get_max_corr(file_path, save=True)
-#vals['group'] = vals['channel'].apply(give_group)
-#
-#import plotly.express as px
-#import plotly
-#fig = px.scatter(vals, x="frequency", y="max_correlation", 
-#                  hover_data=['channel'], color= "group", labels={"max_correlation": "Max Correlation",
-#                                                                 "frequency":"Frequency [Hz]"})
-#fig.update_layout(
-#    title=dict(text="Max Coherence during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
-#        family="Courier New, monospace",
-#        size=18,
-#        color="RebeccaPurple")))
-#
-#
-#plotly.offline.plot(fig, filename = 'plots/scatter_coh_{}.png'.format(int(time_)))
