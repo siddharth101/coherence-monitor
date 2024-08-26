@@ -55,7 +55,7 @@ def get_observing_segs(t1, t2, ifo='L1'):
 
 def get_times(seglist, duration=3600):
     
-    times = [np.arange(i.start, i.end,  3600) for i in seglist]
+    times = [np.arange(i.start, i.end,  duration) for i in seglist]
     
     try:
         times_ = [item for sublist in times for item in sublist]
@@ -87,7 +87,7 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
     
     savedir = os.path.join(savedir, '{}'.format(t1), '')
     if not os.path.exists(savedir):
-        print("Creating the output dir")
+        print("Creating the output dir {}".format(savedir))
         os.makedirs(savedir)
      
     h_t = '{}:GDS-CALIB_STRAIN'.format(ifo)
