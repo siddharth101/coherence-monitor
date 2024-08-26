@@ -224,14 +224,15 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
     fig1.update_layout(
     title=dict(text="Highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
         family="Courier New, monospace",
-        size=18,
+        size=28,
         color="RebeccaPurple")))
+    fig1.update_layout(font_size=28)
     
     print("making figure 2")
     fig2.update_layout(
     title=dict(text="Second highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
         family="Courier New, monospace",
-        size=18,
+        size=28,
         color="RebeccaPurple")))
 
 
