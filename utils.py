@@ -96,7 +96,7 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
         coh = calc_coherence(strain_data=strain_data,channel1=None,
                              channel2= i, frame_file = frame_files, 
                              start_time = t1, end_time = t2, fft=10, overlap=5)
-        coh.write(savedir + i.replace(':', '_').replace('-','_')+'_{}_{}.csv'.format(t1, t2))
+        coh.write(savedir + i +'.csv'.format(t1, t2))
         
     return
                   
@@ -188,7 +188,7 @@ def find_max_corr_channel(path,fft=10,ifo='L1'):
     for i in range(len(frame_)):
         max_val_ = frame_.iloc[i,1::2].sort_values(ascending=False)
         chan_names =  max_val_.index[0:2]
-        chan_names = [i.replace('_corr', '').replace(f'{ifo}_', f'{ifo}:') for i in chan_names]
+        chan_names = [i.replace('_corr', '') for i in chan_names]
         
         max_corr_val = [max_val_.iloc[0], max_val_.iloc[1]]
         
@@ -212,7 +212,6 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
     vals['group1'] = vals['channel1'].apply(give_group_v2)
     vals['group2'] = vals['channel2'].apply(give_group_v2)
 
-
     fig1 = px.scatter(vals, x="frequency", y="corr1", 
                   hover_data=['channel1'], color= "group1", labels={"max_correlation": "Max Coherence",
                                                                  "frequency":"Frequency [Hz]"})
@@ -235,8 +234,9 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
         size=28,
         color="RebeccaPurple")))
 
-
     plotly.offline.plot(fig1, filename = 'plots/channels_coh_{}_a.png'.format(int(time_)))
     plotly.offline.plot(fig2, filename = 'plots/channels_coh_{}_b.png'.format(int(time_)))
+
+
     
     return vals
