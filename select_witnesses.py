@@ -40,4 +40,4 @@ for c in channels2:
 with open('chanlist_o4.ini','w') as f:
     f.write(args.ifo+':GDS-CALIB_STRAIN\n')
     for c in channels:
-        f.write(c[:-26].replace('_','-',1)+'\n')
+        f.write(c.replace('_','-',1)+'\n')
