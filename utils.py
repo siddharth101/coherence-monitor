@@ -161,7 +161,7 @@ def combine_csv(dir_path, ifo):
     chan_removes = get_unsafe_channels(ifo=ifo)['channel']
     
     for j in chan_removes:
-        j = j.replace(':','_').replace('-','_')
+        #j = j.replace(':','_').replace('-','_')
         all_files = [i for i in all_files if not i.startswith(path + j)]
      
     
@@ -201,7 +201,7 @@ def find_max_corr_channel(path,fft=10,ifo='L1'):
         
 
 
-def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
+def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True):
     '''This function plots the channels that have highest and second
     highest coherence at each frequency between flow and fhigh'''
     
@@ -211,32 +211,35 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200):
     vals = vals.iloc[flow*fft:fhigh*fft+1] # this would need to incorportate fft information
     vals['group1'] = vals['channel1'].apply(give_group_v2)
     vals['group2'] = vals['channel2'].apply(give_group_v2)
-
-    fig1 = px.scatter(vals, x="frequency", y="corr1", 
-                  hover_data=['channel1'], color= "group1", labels={"max_correlation": "Max Coherence",
-                                                                 "frequency":"Frequency [Hz]"})
     
-    print("Plotting figure 2")
-    fig2 = px.scatter(vals, x="frequency", y="corr2", 
-                  hover_data=['channel2'], color= "group2", labels={"max_correlation": "Max Coherence",
-                                                                 "frequency":"Frequency [Hz]"})
-    fig1.update_layout(
-    title=dict(text="Highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
-        family="Courier New, monospace",
-        size=28,
-        color="RebeccaPurple")))
-    fig1.update_layout(font_size=28)
-    
-    print("making figure 2")
-    fig2.update_layout(
-    title=dict(text="Second highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
-        family="Courier New, monospace",
-        size=28,
-        color="RebeccaPurple")))
+    if plot:
+        fig1 = px.scatter(vals, x="frequency", y="corr1", 
+                      hover_data=['channel1'], color= "group1", labels={"max_correlation": "Max Coherence",
+                                                                     "frequency":"Frequency [Hz]"})
 
-    plotly.offline.plot(fig1, filename = 'plots/channels_coh_{}_a.png'.format(int(time_)))
-    plotly.offline.plot(fig2, filename = 'plots/channels_coh_{}_b.png'.format(int(time_)))
+        print("Plotting figure 2")
+        fig2 = px.scatter(vals, x="frequency", y="corr2", 
+                      hover_data=['channel2'], color= "group2", labels={"max_correlation": "Max Coherence",
+                                                                     "frequency":"Frequency [Hz]"})
+        fig1.update_layout(
+        title=dict(text="Highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
+            family="Courier New, monospace",
+            size=28,
+            color="RebeccaPurple")))
+        fig1.update_layout(font_size=28)
 
+        print("making figure 2")
+        fig2.update_layout(
+        title=dict(text="Second highest Coherence channel at each frequency during {} -- {}".format(str(time_), str(time_ + 900)), font=dict(
+            family="Courier New, monospace",
+            size=28,
+            color="RebeccaPurple")))
+
+        plotly.offline.plot(fig1, filename = 'plots/channels_coh_{}_a.png'.format(int(time_)))
+        plotly.offline.plot(fig2, filename = 'plots/channels_coh_{}_b.png'.format(int(time_)))
+
+    else:
+        pass
 
     
     return vals
