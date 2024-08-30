@@ -30,7 +30,7 @@ if not os.path.exists(savedir_path):
 
 
 segs_ = get_observing_segs(date1, date2)
-times_segs = get_times(seglist=segs_, duration=dur)
+times_segs = get_times(seglist=segs_, duration=3600)
 
 channel_path = 'channel_files/{}/'.format(ifo)
 
