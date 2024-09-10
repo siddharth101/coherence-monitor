@@ -72,17 +72,29 @@ def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, str
     t2 = to_gps(end_time)
     
     ts2 = TimeSeries.read(frame_file, channel=channel2, start=t1, end=t2)
-    ts1 = strain_data #TimeSeries.fetch(channel1, t1, t2)
+    if channel1:
+        TimeSeries.fetch(channel1, t1, t2)
+    else:
+        ts1 = strain_data #TimeSeries.fetch(channel1, t1, t2)
+    
     
     ts1 = ts1.resample(ts2.sample_rate)
     
     coh = ts1.coherence(ts2, fftlength=fft, overlap=overlap)
     
+    for i in np.where(coh.value==np.inf)[0]:
+        #print("Replacing infinite coherence value with average of last two values")
+        try:
+            coh.value[i] = (coh.value[i-2] + coh.value[i-1])/2
+        except:
+            coh.value[i] = 1e-20
+    
     return coh
 
+import os
+import concurrent.futures
 
-def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, ifo='L1'):
-    
+def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, ifo='L1', timeout=30):
     t1, t2 = to_gps(starttime), to_gps(endtime)
     
     savedir = os.path.join(savedir, '{}'.format(t1), '')
@@ -91,14 +103,52 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
         os.makedirs(savedir)
      
     h_t = '{}:GDS-CALIB_STRAIN'.format(ifo)
+    
+  
     for i in channel_list:
-    #    print(f"Calculating coherence between DARM and {i}")
-        coh = calc_coherence(strain_data=strain_data,channel1=None,
-                             channel2= i, frame_file = frame_files, 
-                             start_time = t1, end_time = t2, fft=10, overlap=5)
-        coh.write(savedir + i +'.csv'.format(t1, t2))
+        #print(f"Calculating coherence between DARM and {i}")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(calc_coherence, strain_data=strain_data, channel1=None, 
+                                     channel2=i, frame_file=frame_files, 
+                                     start_time=t1, end_time=t2, fft=10, overlap=5)
+            try:
+                coh = future.result(timeout=timeout)
+                coh_ = coh[coh.value > 0.1]
+                if len(coh_) > 0:
+                    coh_.write(savedir + i + '.csv')
+                    
+            except concurrent.futures.TimeoutError:
+                print(f"Calculation for channel {i} timed out.")
+                continue
         
+        
+    
     return
+
+
+# def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, ifo='L1'):
+    
+#     t1, t2 = to_gps(starttime), to_gps(endtime)
+    
+#     savedir = os.path.join(savedir, '{}'.format(t1), '')
+#     if not os.path.exists(savedir):
+#         print("Creating the output dir {}".format(savedir))
+#         os.makedirs(savedir)
+     
+#     h_t = '{}:GDS-CALIB_STRAIN'.format(ifo)
+#     for i in channel_list:
+#     #    print(f"Calculating coherence between DARM and {i}")
+#         coh = calc_coherence(strain_data=strain_data,channel1=None,
+#                              channel2= i, frame_file = frame_files, 
+#                              start_time = t1, end_time = t2, fft=10, overlap=5)
+        
+#         coh_ = coh[coh.value>0.1]
+#         if len(coh_)>0:
+#             coh_.write(savedir + i +'.csv'.format(t1, t2))
+#         else:
+#             pass
+        
+#     return
                   
 
 def get_max_corr(output_dir, save=False):
@@ -201,7 +251,7 @@ def find_max_corr_channel(path,fft=10,ifo='L1'):
         
 
 
-def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True):
+def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=None):
     '''This function plots the channels that have highest and second
     highest coherence at each frequency between flow and fhigh'''
     
@@ -235,8 +285,8 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True):
             size=28,
             color="RebeccaPurple")))
 
-        plotly.offline.plot(fig1, filename = 'plots/channels_coh_{}_a.png'.format(int(time_)))
-        plotly.offline.plot(fig2, filename = 'plots/channels_coh_{}_b.png'.format(int(time_)))
+        plotly.offline.plot(fig1, filename = '{}/channels_coh_{}_a.png'.format(savedir, int(time_)))
+        plotly.offline.plot(fig2, filename = '{}/channels_coh_{}_b.png'.format(savedir, int(time_)))
 
     else:
         pass
