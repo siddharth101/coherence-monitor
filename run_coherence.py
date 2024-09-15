@@ -1,11 +1,25 @@
-from utils import get_observing_segs, get_times, calc_coherence, run_coherence, get_max_corr, get_frame_files, get_strain_data, get_unsafe_channels
-from gwpy.timeseries import TimeSeries
-from datetime import datetime, timedelta
-import multiprocessing
-import pandas as pd
+"""Script to run coherence between strain data and auxiliary data for any given time"""
+
+import os
 import random
 import argparse
-import os
+import multiprocessing
+from datetime import datetime, timedelta
+import pandas as pd
+from gwpy.timeseries import TimeSeries
+from utils import (
+    get_observing_segs,
+    get_times,
+    calc_coherence,
+    run_coherence,
+    get_max_corr,
+    get_frame_files,
+    get_strain_data,
+    get_unsafe_channels,
+)
+
+
+__author__ = 'Siddharth Soni <siddharth.soni@ligo.org>'
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--date', type=str, help='YYYY-MM-DD', default=None)
@@ -23,8 +37,8 @@ if args.date is not None:
 elif args.time is not None:
     t1 = args.time
     date1 = t1
-    date2 = t1+86400
-else: 
+    date2 = t1 + 86400
+else:
     raise Exception("Either date or GPS time needs to be defined!")
 
 ifo = args.ifo
@@ -36,7 +50,9 @@ times_segs = get_times(seglist=segs_)
 
 channel_path = 'channel_files/{}/'.format(ifo)
 
-df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
+df_all_chans = pd.read_csv(
+    channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel']
+)
 
 if args.date is not None:
     time_ = random.choice(times_segs)
@@ -45,42 +61,60 @@ if args.time is not None:
 
 df_unsafe_chans = get_unsafe_channels(ifo)
 print("Total auxiliary channels: {}".format(len(df_all_chans)))
-df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
-print("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
 
+df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+
+print("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
 
 print("Time is {}".format(time_))
 
 ht_data = get_strain_data(time_, time_ + dur, ifo=ifo)
 
-print("Got h(t) data between {} and {}".format(time_, time_+dur))
+print("Got h(t) data between {} and {}".format(time_, time_ + dur))
 print(ht_data.duration)
+
 
 def give_group(a):
     group = a.split('_')[1]
-    
     return group
 
-def get_coherence_chan(channel_list, ifo=ifo, gpstime=time_, strain_data=ht_data, dur=dur):
-   
+
+def get_coherence_chan(channel_list, gpstime, ifo, strain_data, dur):
     files_ = get_frame_files(gpstime, gpstime + dur, ifo=ifo)
     print("Got {} files".format(len(files_)))
-    run_coherence(channel_list=channel_list, frame_files = files_, starttime=gpstime, 
-                  endtime=gpstime+dur, ifo=ifo, strain_data=ht_data, savedir=savedir)
-        
-        
+    run_coherence(
+        channel_list=channel_list,
+        frame_files=files_,
+        starttime=gpstime,
+        endtime=gpstime + dur,
+        ifo=ifo,
+        strain_data=strain_data,
+        savedir=savedir,
+    )
     return
 
+
 def run_process(channel_df):
-    
-    
-    processes = [multiprocessing.Process(target = get_coherence_chan, 
-                             args=(channel_df.iloc[i:i+50]['channel'], 
-                                   ifo, time_, ht_data, dur)) for i in range(0,900,50)]
-    
-    [i.start() for i in processes]
-    [i.join() for i in processes]
-    
+    if len(channel_df) > 850:
+        processes = [
+            multiprocessing.Process(
+                target=get_coherence_chan,
+                args=(channel_df.iloc[i:i + 50]['channel'], time_, ifo, ht_data, dur),
+            )
+            for i in range(0, 900, 50)
+        ]
+    else:
+        processes = [
+            multiprocessing.Process(
+                target=get_coherence_chan,
+                args=(channel_df.iloc[i:i + 50]['channel'], time_, ifo, ht_data, dur),
+            )
+            for i in range(0, 850, 50)
+        ]
+
+    [p.start() for p in processes]
+    [p.join() for p in processes]
+
     return
 
 
@@ -91,5 +125,3 @@ run_process(df_all_chans)
 
 tac = time.time()
 print(tac - tic)
-
-
