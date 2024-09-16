@@ -26,12 +26,14 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--date', type=str, help='YYYY-MM-DD')
 parser.add_argument('--ifo', type=str, help='L1 or H1')
 parser.add_argument('--dur', type=float, default=1024.0, help='duration of data in secs')
+parser.add_argument('--cohthresh', type=float, default=0.1, help='coherence threshold for channel files')
 parser.add_argument('--savedir', default=os.curdir, type=str, help='output directory to save data')
 args = parser.parse_args()
 
 t1 = args.date
 ifo = args.ifo
 dur = args.dur
+coh_thresh = args.cohthresh
 savedir = args.savedir
 
 if not os.path.exists(savedir):
@@ -41,12 +43,12 @@ date1 = datetime.strptime(t1, '%Y-%m-%d')
 date2 = date1 + timedelta(days=1)
 date2 = date2.strftime('%Y-%m-%d')
 
-savedir_path = os.path.join(savedir, t1, '')
+savedir_path = os.path.join(savedir, t1, 'data', '')
 
 if not os.path.exists(savedir_path):
     os.makedirs(savedir_path)
 
-segs_ = get_observing_segs(date1, date2)
+segs_ = get_observing_segs(date1, date2, ifo)
 times_segs = get_times(seglist=segs_, duration=3600)
 
 channel_path = 'channel_files/{}/'.format(ifo)
@@ -77,6 +79,7 @@ def get_coherence_chan(channel_list, gpstime, ifo, strain_data, dur):
         ifo=ifo,
         strain_data=strain_data,
         savedir=savedir_path,
+        coh_thresh = coh_thresh
     )
     return
 
@@ -122,18 +125,18 @@ for i in times_segs:
     tac = time.time()
     print(tac - tic)
 
-public_html = '/home/siddharth.soni/public_html/coherence_monitor/'
-path_outdir = os.path.join(public_html, args.date, 'plots', '')
-if not os.path.exists(path_outdir):
-    os.makedirs(path_outdir)
+# public_html = '/home/siddharth.soni/public_html/coherence_monitor/{}'.format(ifo)
+# path_outdir = os.path.join(public_html, args.date, 'plots', '')
+# if not os.path.exists(path_outdir):
+#     os.makedirs(path_outdir)
 
-dirs_path = os.path.join(args.savedir, args.date, 'data', '')
-print(dirs_path)
+# dirs_path = savedir_path #os.path.join(args.savedir, args.date, 'data', '')
+# print(dirs_path)
 
-for filepath in os.listdir(dirs_path):
-    path_ = os.path.join(dirs_path, filepath, '')
-    print(path_)
-    savedir_plots = os.path.join(dirs_path, 'plots')
-    if not os.path.exists(savedir_plots):
-        os.makedirs(savedir_plots)
-    plot_max_corr_chan(path=path_, ifo=args.ifo, fft=10, savedir=savedir_plots)
+# for filepath in os.listdir(dirs_path):
+#     path_ = os.path.join(dirs_path, filepath, '')
+#     print(path_)
+#     savedir_plots = os.path.join(path_outdir)
+#     if not os.path.exists(savedir_plots):
+#         os.makedirs(savedir_plots)
+#     plot_max_corr_chan(path=path_, ifo=args.ifo, fft=10, savedir=savedir_plots)
