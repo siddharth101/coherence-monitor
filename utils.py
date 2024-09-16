@@ -16,7 +16,7 @@ __author__ = 'Siddharth Soni <siddharth.soni@ligo.org>'
 
 
 def give_group_v2(a):
-    group = a.split(':')[1].split('_')[0]
+    group = a.split(':')[1].split('-')[0]
     return group
 
 
@@ -36,7 +36,7 @@ def get_unsafe_channels(ifo):
     return pd.read_csv(path)
 
 
-def get_observing_segs(t1, t2, ifo='L1'):
+def get_observing_segs(t1, t2, ifo):
     tstart = to_gps(t1)
     tend = to_gps(t2)
     segs = DataQualityFlag.query(f'{ifo}:DMT-ANALYSIS_READY:1', t1, t2)
@@ -183,11 +183,12 @@ def find_max_corr_channel(path, fft=10, ifo='L1'):
     for i in range(len(frame_)):
         max_val_ = frame_.iloc[i, 1::2].sort_values(ascending=False)
         chan_names = max_val_.index[:2]
-        chan_names = [i.replace('_corr', '') for i in chan_names]
+        chan_names = [i.replace('_corr', '').replace('.csv','') for i in chan_names]
         max_corr_val = [max_val_.iloc[0], max_val_.iloc[1]]
         max_vals.append((i / fft, chan_names[0], max_corr_val[0], chan_names[1], max_corr_val[1]))
 
-    return pd.DataFrame(max_vals, columns=['frequency', 'channel1', 'corr1', 'channel2', 'corr2'])
+    df = pd.DataFrame(max_vals, columns=['frequency', 'channel1', 'coh1', 'channel2', 'coh2'])
+    return df
 
 
 def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=None):
@@ -197,15 +198,17 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=Non
     vals = vals.iloc[flow * fft:fhigh * fft + 1]
     vals['group1'] = vals['channel1'].apply(give_group_v2)
     vals['group2'] = vals['channel2'].apply(give_group_v2)
+    vals = vals[(vals['coh1'] <=1) & (vals['coh2']<=1)]
+    vals.rename(columns={'coh1':'coherence', 'coh2':'Coherence'},  inplace=True)
 
     if plot:
-        fig1 = px.scatter(vals, x="frequency", y="corr1", hover_data=['channel1'], color="group1",
+        fig1 = px.scatter(vals, x="frequency", y="coherence", hover_data=['channel1'], color="group1",
                           labels={"max_correlation": "Max Coherence", "frequency": "Frequency [Hz]"})
         fig1.update_layout(
             title=dict(text=f"Highest Coherence channel at each frequency during {time_} -- {time_ + 900}",
                        font=dict(family="Courier New, monospace", size=28, color="RebeccaPurple")))
 
-        fig2 = px.scatter(vals, x="frequency", y="corr2", hover_data=['channel2'], color="group2",
+        fig2 = px.scatter(vals, x="frequency", y="coherence", hover_data=['channel2'], color="group2",
                           labels={"max_correlation": "Max Coherence", "frequency": "Frequency [Hz]"})
         fig2.update_layout(
             title=dict(text=f"Second highest Coherence channel at each frequency during {time_} -- {time_ + 900}",
