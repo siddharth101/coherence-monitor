@@ -26,6 +26,7 @@ parser.add_argument('--date', type=str, help='YYYY-MM-DD', default=None)
 parser.add_argument('--time', type=float, help='gps time', default=None)
 parser.add_argument('--ifo', type=str, help='L1 or H1')
 parser.add_argument('--dur', type=float, default=1024.0, help='duration of data in secs')
+parser.add_argument('--cohthresh', type=float, default=0.1, help='coherence threshold for channel files')
 parser.add_argument('--savedir', default=os.curdir, type=str, help='output directory to save data')
 args = parser.parse_args()
 
@@ -44,6 +45,7 @@ else:
 ifo = args.ifo
 dur = args.dur
 savedir = args.savedir
+coh_thresh = args.cohthresh
 
 segs_ = get_observing_segs(date1, date2)
 times_segs = get_times(seglist=segs_)
@@ -90,6 +92,7 @@ def get_coherence_chan(channel_list, gpstime, ifo, strain_data, dur):
         ifo=ifo,
         strain_data=strain_data,
         savedir=savedir,
+        coh_thresh = coh_thresh
     )
     return
 

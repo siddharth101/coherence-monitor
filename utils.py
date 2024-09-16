@@ -80,7 +80,7 @@ def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, str
 import concurrent.futures
 
 
-def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, ifo='L1', timeout=30):
+def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, coh_thresh, ifo='L1', timeout=30):
     t1, t2 = to_gps(starttime), to_gps(endtime)
     savedir = os.path.join(savedir, f'{t1}', '')
 
@@ -96,7 +96,7 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
 
             try:
                 coh = future.result(timeout=timeout)
-                coh_ = coh[coh.value > 0.1]
+                coh_ = coh[coh.value > coh_thresh]
                 if len(coh_) > 0:
                     coh_.write(f'{savedir}{channel}.csv')
 
