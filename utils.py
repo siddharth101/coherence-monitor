@@ -51,7 +51,7 @@ def get_observing_segs(t1, t2, ifo):
 
 
 def get_times(seglist, duration=3600):
-    times = [np.arange(i.start, i.end, duration) for i in seglist]
+    times = [np.arange(i.start, i.end - duration, duration) for i in seglist]
     return [item for sublist in times for item in sublist]
 
 
@@ -218,3 +218,13 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=Non
         plotly.offline.plot(fig2, filename=f'{savedir}/channels_coh_{int(time_)}_b.png')
 
     return vals
+def check_channel_coherence(channel, ifo, t1, t2):
+
+    files = get_frame_files(starttime=t1, endtime=t2, ifo=ifo)
+    ts_aux = TimeSeries.read(files, channel=channel, start=t1, end=t2)
+    ts_gds = TimeSeries.fetch('{}:GDS-CALIB_STRAIN'.format(ifo), t1, t2)
+
+    ts_gds = ts_gds.resample(ts_aux.sample_rate)
+    coh = ts_gds.coherence(ts_aux, fftlength=10, overlap=5)
+
+    return coh

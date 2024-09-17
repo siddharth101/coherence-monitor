@@ -98,21 +98,12 @@ def get_coherence_chan(channel_list, gpstime, ifo, strain_data, dur):
 
 
 def run_process(channel_df):
-    if len(channel_df) > 850:
-        processes = [
+    processes = [
             multiprocessing.Process(
                 target=get_coherence_chan,
-                args=(channel_df.iloc[i:i + 50]['channel'], time_, ifo, ht_data, dur),
+                args=(channel_df.iloc[i:i + 60]['channel'], time_, ifo, ht_data, dur),
             )
-            for i in range(0, 900, 50)
-        ]
-    else:
-        processes = [
-            multiprocessing.Process(
-                target=get_coherence_chan,
-                args=(channel_df.iloc[i:i + 50]['channel'], time_, ifo, ht_data, dur),
-            )
-            for i in range(0, 850, 50)
+            for i in range(0, 900, 60)
         ]
 
     [p.start() for p in processes]

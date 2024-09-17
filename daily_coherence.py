@@ -85,21 +85,12 @@ def get_coherence_chan(channel_list, gpstime, ifo, strain_data, dur):
 
 
 def run_process(channel_df, time, ifo, strain_data, dur):
-    if len(channel_df) > 850:
-        processes = [
+    processes = [
             multiprocessing.Process(
                 target=get_coherence_chan,
-                args=(channel_df.iloc[i:i + 50]['channel'], time, ifo, strain_data, dur),
+                args=(channel_df.iloc[i:i + 60]['channel'], time, ifo, strain_data, dur),
             )
-            for i in range(0, 900, 50)
-        ]
-    else:
-        processes = [
-            multiprocessing.Process(
-                target=get_coherence_chan,
-                args=(channel_df.iloc[i:i + 50]['channel'], time, ifo, strain_data, dur),
-            )
-            for i in range(0, 850, 50)
+            for i in range(0, 900, 60)
         ]
 
     [p.start() for p in processes]
@@ -125,18 +116,20 @@ for i in times_segs:
     tac = time.time()
     print(tac - tic)
 
-# public_html = '/home/siddharth.soni/public_html/coherence_monitor/{}'.format(ifo)
-# path_outdir = os.path.join(public_html, args.date, 'plots', '')
-# if not os.path.exists(path_outdir):
-#     os.makedirs(path_outdir)
+print("Analysis done now, making plots")
 
-# dirs_path = savedir_path #os.path.join(args.savedir, args.date, 'data', '')
-# print(dirs_path)
+public_html = '/home/siddharth.soni/public_html/coherence_monitor/{}'.format(ifo)
+path_outdir = os.path.join(public_html, args.date, 'plots', '')
+if not os.path.exists(path_outdir):
+    os.makedirs(path_outdir)
 
-# for filepath in os.listdir(dirs_path):
-#     path_ = os.path.join(dirs_path, filepath, '')
-#     print(path_)
-#     savedir_plots = os.path.join(path_outdir)
-#     if not os.path.exists(savedir_plots):
-#         os.makedirs(savedir_plots)
-#     plot_max_corr_chan(path=path_, ifo=args.ifo, fft=10, savedir=savedir_plots)
+dirs_path = savedir_path #os.path.join(args.savedir, args.date, 'data', '')
+print(dirs_path)
+
+for filepath in os.listdir(dirs_path):
+    path_ = os.path.join(dirs_path, filepath, '')
+    print(path_)
+    savedir_plots = os.path.join(path_outdir)
+    if not os.path.exists(savedir_plots):
+        os.makedirs(savedir_plots)
+    plot_max_corr_chan(path=path_, ifo=args.ifo, fft=10, savedir=savedir_plots)
