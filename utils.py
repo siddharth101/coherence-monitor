@@ -25,14 +25,18 @@ def get_strain_data(starttime, endtime, ifo='L1'):
     return ht
 
 
-def get_frame_files(starttime, endtime, ifo='L1'):
+def get_frame_files(starttime, endtime, ifo, host=None):
     site_ = ifo[0]
-    files = gwdatafind.find_urls(f'{site_}', f'{ifo}_R', starttime, endtime)
+    if host:
+        files = gwdatafind.find_urls(f'{site_}', f'{ifo}_R', starttime, endtime, host)
+    else:
+        files = gwdatafind.find_urls(f'{site_}', f'{ifo}_R', starttime, endtime)
+        
     return sorted(files)
 
 
 def get_unsafe_channels(ifo):
-    path = f'channel_files/{ifo}/{ifo}_unsafe_channels.csv'
+    path = f'/home/siddharth.soni/src/coherence-monitor/channel_files/{ifo}/{ifo}_unsafe_channels.csv'
     return pd.read_csv(path)
 
 
@@ -46,7 +50,8 @@ def get_observing_segs(t1, t2, ifo):
         if seg.end - seg.start > 3600:
             seg_list.append(seg)
 
-    print("Got the segments")
+    # if seg_list:
+    #     print("Got the segments")
     return seg_list
 
 
@@ -61,13 +66,13 @@ def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, str
     ts2 = TimeSeries.read(frame_file, channel=channel2, start=t1, end=t2)
 
     if channel1:
-        TimeSeries.fetch(channel1, t1, t2)
+        ts1 = TimeSeries.fetch(channel1, t1, t2)
     else:
         ts1 = strain_data
 
     ts1 = ts1.resample(ts2.sample_rate)
     coh = ts1.coherence(ts2, fftlength=fft, overlap=overlap)
-
+    #print(f"Got coherence for {channel2}")
     for i in np.where(coh.value == np.inf)[0]:
         try:
             coh.value[i] = (coh.value[i - 2] + coh.value[i - 1]) / 2
@@ -212,7 +217,7 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=Non
                           labels={"max_correlation": "Max Coherence", "frequency": "Frequency [Hz]"})
         fig2.update_layout(
             title=dict(text=f"Second highest Coherence channel at each frequency during {time_} -- {time_ + 900}",
-                       font=dict(family="Courier New, monospace", size=28, color="RebeccaPurple")))
+                       font=dict(family="Cour ier New, monospace", size=28, color="RebeccaPurple")))
 
         plotly.offline.plot(fig1, filename=f'{savedir}/channels_coh_{int(time_)}_a.png')
         plotly.offline.plot(fig2, filename=f'{savedir}/channels_coh_{int(time_)}_b.png')

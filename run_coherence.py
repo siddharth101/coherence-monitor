@@ -47,7 +47,7 @@ dur = args.dur
 savedir = args.savedir
 coh_thresh = args.cohthresh
 
-segs_ = get_observing_segs(date1, date2)
+segs_ = get_observing_segs(date1, date2, ifo=ifo)
 times_segs = get_times(seglist=segs_)
 
 channel_path = 'channel_files/{}/'.format(ifo)
