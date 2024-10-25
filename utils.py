@@ -63,7 +63,11 @@ def get_times(seglist, duration=3600):
 def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, strain_data, channel1=None):
     t1 = to_gps(start_time)
     t2 = to_gps(end_time)
-    ts2 = TimeSeries.read(frame_file, channel=channel2, start=t1, end=t2)
+    if frame_file:
+        ts2 = TimeSeries.read(frame_file, channel=channel2, start=t1, end=t2)
+    else:
+        ts2 = TimeSeries.fetch(channel2, start=t1, end=t2)
+        
 
     if channel1:
         ts1 = TimeSeries.fetch(channel1, t1, t2)
@@ -72,7 +76,7 @@ def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, str
 
     ts1 = ts1.resample(ts2.sample_rate)
     coh = ts1.coherence(ts2, fftlength=fft, overlap=overlap)
-    #print(f"Got coherence for {channel2}")
+
     for i in np.where(coh.value == np.inf)[0]:
         try:
             coh.value[i] = (coh.value[i - 2] + coh.value[i - 1]) / 2
@@ -80,6 +84,7 @@ def calc_coherence(channel2, frame_file, start_time, end_time, fft, overlap, str
             coh.value[i] = 1e-20
 
     return coh
+
 
 
 import concurrent.futures
