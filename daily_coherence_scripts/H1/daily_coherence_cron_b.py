@@ -80,6 +80,7 @@ segs_ = get_observing_segs(t1, t2, ifo)
 if segs_:
     times_segs = get_times(seglist=segs_, duration=3600)
     logging.info("Got the segments")
+    logging.info(f"The coherence monitor will run for each of the times in {times_segs}")
 else:
     logging.info("No Observing segments")
 
@@ -169,9 +170,8 @@ if times_segs:
         for filepath in os.listdir(dirs_path):
             path_ = os.path.join(dirs_path, filepath, '')
             logging.info(path_)
-            savedir_plots = os.path.join(path_outdir)
-            if not os.path.exists(savedir_plots):
-                os.makedirs(savedir_plots)
+            t = path_.split('/')[-2]
+            savedir_plots = os.path.join(path_outdir, t, '')
             plot_max_corr_chan(path=path_, ifo=ifo, fft=10, savedir=savedir_plots)
     except Exception as e:
         logging.error(f"An error occurred: {e}")   

@@ -38,8 +38,12 @@ now  = from_gps(tconvert(gpsordate='now'))
 date = now.strftime('%Y-%m-%d')
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
-date_tomorrow = date_ + timedelta(days=1)
 
+# date = date_ + timedelta(days=-1)
+# date = date.strftime('%Y-%m-%d')
+# date_tomorrow = date_
+
+date_tomorrow = date_ + timedelta(days=1)
 
 gps_today = to_gps(date).gpsSeconds
 gps_tomorrow = to_gps(date_tomorrow).gpsSeconds
@@ -159,7 +163,8 @@ if times_segs:
 
         logging.info("Analysis done now, making plots")
 
-        path_outdir = os.path.join(savedir, date, str(gps_today), 'plots', '')
+        
+        path_outdir = os.path.join(savedir, date, str(gps_today), 'plots','')
         if not os.path.exists(path_outdir):
             os.makedirs(path_outdir)
 
@@ -169,9 +174,8 @@ if times_segs:
         for filepath in os.listdir(dirs_path):
             path_ = os.path.join(dirs_path, filepath, '')
             logging.info(path_)
-            savedir_plots = os.path.join(path_outdir)
-            if not os.path.exists(savedir_plots):
-                os.makedirs(savedir_plots)
+            t = path_.split('/')[-2]
+            savedir_plots = os.path.join(path_outdir, t, '')
             plot_max_corr_chan(path=path_, ifo=ifo, fft=10, savedir=savedir_plots)
     except Exception as e:
         logging.error(f"An error occurred: {e}")   

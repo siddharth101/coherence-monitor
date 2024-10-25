@@ -80,6 +80,7 @@ segs_ = get_observing_segs(t1, t2, ifo)
 if segs_:
     times_segs = get_times(seglist=segs_, duration=3600)
     logging.info("Got the segments")
+    logging.info(f"The coherence monitor will run for each of the times in {times_segs}")
 else:
     logging.info("No Observing segments")
 

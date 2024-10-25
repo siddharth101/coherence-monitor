@@ -38,15 +38,17 @@ now  = from_gps(tconvert(gpsordate='now'))
 date = now.strftime('%Y-%m-%d')
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
+date_yesterday = date_ + timedelta(days=-1)
+date_yesterday_ = date_yesterday.strftime('%Y-%m-%d')
 date_tomorrow = date_ + timedelta(days=1)
 
 
-gps_today = to_gps(date).gpsSeconds
-gps_tomorrow = to_gps(date_tomorrow).gpsSeconds
+gps_yesterday = to_gps(date_yesterday).gpsSeconds
+gps_today = to_gps(date_).gpsSeconds
 
-t1 = gps_today + 8*3600
-t2 = gps_today + 16*3600
-t3 = gps_tomorrow
+t1 = gps_yesterday + 8*3600
+t2 = gps_yesterday + 16*3600
+t3 = gps_today
 
 
 ifo = 'L1'
@@ -59,8 +61,8 @@ coh_thresh = 0.1
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 
-savedir_path = os.path.join(savedir, date, str(gps_today), 'data', '')
-logfilepath = os.path.join(savedir, date, str(gps_today), '')
+savedir_path = os.path.join(savedir, date_yesterday_, str(gps_yesterday), 'data', '')
+logfilepath = os.path.join(savedir, date_yesterday_, str(gps_yesterday), '')
 
 if not os.path.exists(savedir_path):
     os.makedirs(savedir_path)
@@ -76,10 +78,11 @@ logging.basicConfig(
 
 
 
-segs_ = get_observing_segs(t2, gps_tomorrow, ifo)
+segs_ = get_observing_segs(t2, t3, ifo)
 if segs_:
     times_segs = get_times(seglist=segs_, duration=3600)
     logging.info("Got the segments")
+    logging.info(f"The coherence monitor will run for each of the times in {times_segs}")
 else:
     logging.info("No Observing segments")
 
@@ -125,7 +128,7 @@ def run_process(channel_df, time, ifo, strain_data, dur):
 
 if times_segs:
 
-    logging.info(f"Running the coherence monitor on {date} for {ifo}")
+    logging.info(f"Running the coherence monitor on {date_yesterday_} for {ifo}")
     logging.info(f"Calculating coherence for {ifo} between {gps_today} and {t1}")
 
     channel_path = '/home/siddharth.soni/src/coherence-monitor/channel_files/{}/'.format(ifo)
