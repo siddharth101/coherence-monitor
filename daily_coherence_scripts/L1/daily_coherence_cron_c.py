@@ -166,15 +166,15 @@ if times_segs:
         if not os.path.exists(path_outdir):
             os.makedirs(path_outdir)
 
-        dirs_path = savedir_path #os.path.join(savedir, date1, 'data', '')
-        logging.info(dirs_path)
+        #dirs_path = savedir_path #os.path.join(savedir, date1, 'data', '')
+        logging.info(savedir_path)
 
-        for filepath in os.listdir(dirs_path):
-            path_ = os.path.join(dirs_path, filepath, '')
+        for filepath in os.listdir(savedir_path):
+            path_ = os.path.join(savedir_path, filepath, '')
             logging.info(path_)
-            savedir_plots = os.path.join(path_outdir)
-            if not os.path.exists(savedir_plots):
-                os.makedirs(savedir_plots)
+            t = path_.split('/')[-2]
+            savedir_plots = os.path.join(path_outdir, t, '')
+            os.makedirs(savedir_plots, exist_ok=True)
             plot_max_corr_chan(path=path_, ifo=ifo, fft=10, savedir=savedir_plots)
     except Exception as e:
         logging.error(f"An error occurred: {e}")   

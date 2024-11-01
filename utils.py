@@ -228,6 +228,8 @@ def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=Non
         plotly.offline.plot(fig2, filename=f'{savedir}/channels_coh_{int(time_)}_b.png')
 
     return vals
+
+
 def check_channel_coherence(channel, ifo, t1, t2):
 
     files = get_frame_files(starttime=t1, endtime=t2, ifo=ifo)
@@ -238,3 +240,47 @@ def check_channel_coherence(channel, ifo, t1, t2):
     coh = ts_gds.coherence(ts_aux, fftlength=10, overlap=5)
 
     return coh
+
+def create_dataframe(files):
+    
+    df_list = []
+    for file in files:
+            df = pd.read_csv(file, header=None, names=['frequency', 'coherence'])
+            df = df[(df['coherence']>0.9) & 
+                    (df['frequency']<200) ]# & ((df['frequency']>61) | (df['frequency']<59))]
+            if len(df)!=0:
+                chan_name = file.split('/')[-1].split('.csv')[0]
+                df['channel'] = [chan_name]*len(df)
+                df_list.append(df)
+                
+    frame = pd.concat(df_list, axis=0, ignore_index=True)
+    
+    return frame
+
+def coherence_above(ifo, date, path=None):
+    
+    gpstime = to_gps(date)
+    if path is None:
+        path = f'/home/siddharth.soni/public_html/coherence_monitor/{ifo}/{date}/{gpstime}/data/'
+    else:
+        path = path
+    times = [os.path.join(path, i, '') for i in os.listdir(path)]
+    
+    if not times:
+        print("No data found for this date")
+    for time in times:
+        gpstime_ = time.split('/')[-2]
+        print(gpstime_)
+        print(f"Running for {time}")
+        files = glob.glob(time + '*.csv')
+        df = create_dataframe(files)
+        
+        print(len(df))
+        if len(df)!=0:
+            path_ = os.path.join(path, 'max_coherence','')
+            os.makedirs(path_, exist_ok=True)
+                #print(path_)
+            df.to_csv(path_ + f'coherence_above_{gpstime_}.csv', index=None)
+        
+    return
+            
