@@ -20,6 +20,7 @@ from utils import (
     get_strain_data,
     get_unsafe_channels,
     plot_max_corr_chan,
+    generate_plots
 )
 
 
@@ -36,6 +37,7 @@ from datetime import datetime, timedelta
 now  = from_gps(tconvert(gpsordate='now'))
 
 date = now.strftime('%Y-%m-%d')
+#date = '2024-11-11'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 
@@ -148,7 +150,7 @@ if times_segs:
 
         for i in times_segs:
             tic = time.time()
-            time_ = i
+            time_ = i + 300 #adding 300 seconds in case the start time is very close to relock time
             logging.info("Time is {}".format(time_))
 
             ht_data = get_strain_data(time_, time_ + dur, ifo=ifo)
@@ -162,22 +164,24 @@ if times_segs:
             logging.info(tac - tic)
 
         logging.info("Analysis done now, making plots")
+        
+        generate_plots(date, ifo=ifo)
 
         
-        path_outdir = os.path.join(savedir, date, str(gps_today), 'plots','')
-        if not os.path.exists(path_outdir):
-            os.makedirs(path_outdir)
+#         path_outdir = os.path.join(savedir, date, str(gps_today), 'plots','')
+#         if not os.path.exists(path_outdir):
+#             os.makedirs(path_outdir)
 
-        #dirs_path = savedir_path #os.path.join(savedir, date1, 'data', '')
-        logging.info(savedir_path)
+#         #dirs_path = savedir_path #os.path.join(savedir, date1, 'data', '')
+#         logging.info(savedir_path)
 
-        for filepath in os.listdir(savedir_path):
-            path_ = os.path.join(savedir_path, filepath, '')
-            logging.info(path_)
-            t = path_.split('/')[-2]
-            savedir_plots = os.path.join(path_outdir, t, '')
-            os.makedirs(savedir_plots, exist_ok=True)
-            plot_max_corr_chan(path=path_, ifo=ifo, fft=10, savedir=savedir_plots)
+#         for filepath in os.listdir(savedir_path):
+#             path_ = os.path.join(savedir_path, filepath, '')
+#             logging.info(path_)
+#             t = path_.split('/')[-2]
+#             savedir_plots = os.path.join(path_outdir, t, '')
+#             os.makedirs(savedir_plots, exist_ok=True)
+#             plot_max_corr_chan(path=path_, ifo=ifo, fft=10, savedir=savedir_plots)
     except Exception as e:
         logging.error(f"An error occurred: {e}")   
         
