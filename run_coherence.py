@@ -22,32 +22,28 @@ from utils import (
 __author__ = 'Siddharth Soni <siddharth.soni@ligo.org>'
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--date', type=str, help='YYYY-MM-DD', default=None)
-parser.add_argument('--time', type=float, help='gps time', default=None)
+parser.add_argument('--t1', type=float, help='gps time', default=None)
+parser.add_argument('--t2', type=float, help='gps time', default=None)
 parser.add_argument('--ifo', type=str, help='L1 or H1')
-parser.add_argument('--dur', type=float, default=1024.0, help='duration of data in secs')
+#parser.add_argument('--dur', type=float, default=1024.0, help='duration of data in secs')
 parser.add_argument('--cohthresh', type=float, default=0.1, help='coherence threshold for channel files')
 parser.add_argument('--savedir', default=os.curdir, type=str, help='output directory to save data')
 args = parser.parse_args()
 
-if args.date is not None:
-    t1 = args.date
-    date1 = datetime.strptime(t1, '%Y-%m-%d')
-    date2 = date1 + timedelta(days=1)
-    date2 = date2.strftime('%Y-%m-%d')
-elif args.time is not None:
-    t1 = args.time
-    date1 = t1
-    date2 = t1 + 86400
-else:
-    raise Exception("Either date or GPS time needs to be defined!")
 
 ifo = args.ifo
-dur = args.dur
+start_time = args.t1
+end_time = args.t2
 savedir = args.savedir
 coh_thresh = args.cohthresh
 
-segs_ = get_observing_segs(date1, date2, ifo=ifo)
+if end_time - start_time < 100:
+    end_time = start_time + 100
+    print(f"End time as too close to starttime, new endtime is {end_time}")
+else:
+    pass
+
+segs_ = get_observing_segs(start_time, end_time, ifo=ifo)
 times_segs = get_times(seglist=segs_)
 
 channel_path = 'channel_files/{}/'.format(ifo)
@@ -56,11 +52,6 @@ df_all_chans = pd.read_csv(
     channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel']
 )
 
-if args.date is not None:
-    time_ = random.choice(times_segs)
-if args.time is not None:
-    time_ = t1
-
 df_unsafe_chans = get_unsafe_channels(ifo)
 print("Total auxiliary channels: {}".format(len(df_all_chans)))
 
@@ -68,11 +59,10 @@ df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['chann
 
 print("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
 
-print("Time is {}".format(time_))
 
-ht_data = get_strain_data(time_, time_ + dur, ifo=ifo)
+ht_data = get_strain_data(start_time, end_time, ifo=ifo)
 
-print("Got h(t) data between {} and {}".format(time_, time_ + dur))
+print("Got h(t) data between {} and {}".format(start_time, end_time))
 print(ht_data.duration)
 
 
@@ -81,14 +71,14 @@ def give_group(a):
     return group
 
 
-def get_coherence_chan(channel_list, gpstime, ifo, strain_data, dur):
-    files_ = get_frame_files(gpstime, gpstime + dur, ifo=ifo)
+def get_coherence_chan(channel_list, starttime, endtime, ifo, strain_data):
+    files_ = get_frame_files(starttime, endtime, ifo=ifo)
     print("Got {} files".format(len(files_)))
     run_coherence(
         channel_list=channel_list,
         frame_files=files_,
-        starttime=gpstime,
-        endtime=gpstime + dur,
+        starttime=starttime,
+        endtime=endtime,
         ifo=ifo,
         strain_data=strain_data,
         savedir=savedir,
@@ -101,7 +91,8 @@ def run_process(channel_df):
     processes = [
             multiprocessing.Process(
                 target=get_coherence_chan,
-                args=(channel_df.iloc[i:i + 60]['channel'], time_, ifo, ht_data, dur),
+                args=(channel_df.iloc[i:i + 60]['channel'], start_time,
+                      end_time, ifo, ht_data),
             )
             for i in range(0, 900, 60)
         ]
