@@ -60,7 +60,8 @@ def get_times(seglist, duration=3600):
     return [item for sublist in times for item in sublist]
 
 
-def calc_coherence(channel2, frame_file=None, start_time, end_time, fft, overlap, strain_data, channel1=None):
+def calc_coherence(channel2, start_time, end_time, fft, overlap, strain_data, frame_file=None,
+                   channel1=None):
     t1 = to_gps(start_time)
     t2 = to_gps(end_time)
     if frame_file:
