@@ -380,3 +380,124 @@ def generate_plots(date, ifo):
         
     
     return
+
+
+### Utilities to read data for any given date
+
+def get_day_files(date, ifo):
+
+    gpstime = to_gps(date).gpsSeconds
+
+    if ifo =='H1':
+        pathifo = '/home/siddharth.soni/public_html/coherence_monitor/H1/'
+    else:
+        pathifo = '/home/siddharth.soni/public_html/coherence_monitor/L1/'
+
+    folder_path = os.path.join(pathifo, date, str(gpstime), 'data','')
+    gps_folders = os.listdir(folder_path)
+
+    files_folders = {}
+    for folder in gps_folders:
+        files = glob.glob(os.path.join(folder_path, folder, '') + '*.csv')
+        files_folders[folder] = files
+
+    return files_folders
+
+
+def get_day_data(date, ifo, mask=True):
+
+    day_files = get_day_files(date, ifo)
+
+    li = []
+    print(f"Getting coherence data for {ifo} on {date}")
+    for key in list(day_files.keys()):
+        print(key)
+        files = day_files[key]
+        for file in files:
+            channame = file.split('.csv')[-2].split('/')[-1]
+            df = pd.read_csv(file, names = ['frequency', 'coherence'])
+            df['gpstime'] = int(key)
+            df['date'] = date
+            df['channel'] = channame
+            li.append(df)
+
+    if len(li)>0:
+        frame_  = pd.concat(li, axis=0, ignore_index=True)
+    else:
+        frame_ = pd.DataFrame()
+
+    if mask and len(li)>0:
+        frame_= freq_masks(frame_)
+        frame_.reset_index(drop=True, inplace=True)
+    else:
+        pass
+
+    return frame_
+
+
+### Utilities to read day data using multiprocessing
+
+def read_data_folder(day_files, n1=0, n2=2, mask=True):
+
+    folders = list(day_files.keys())[n1:n2]
+    li = []
+    for folder in folders:
+        files = day_files[folder]
+        date = from_gps(folder).strftime('%Y-%m-%d')
+        print(f"Reading data for {folder}")
+        for file in files:
+
+            channame = file.split('.csv')[-2].split('/')[-1]
+            df = pd.read_csv(file, names = ['frequency', 'coherence'])
+            df['gpstime'] = int(folder)
+            df['date'] = date
+            df['channel'] = channame
+            li.append(df)
+
+        if len(li)>0:
+            frame_  = pd.concat(li, axis=0, ignore_index=True)
+        else:
+            frame_ = pd.DataFrame()
+
+        if mask and len(li)>0:
+            frame_= freq_masks(frame_)
+            frame_.reset_index(drop=True, inplace=True)
+        else:
+            pass
+
+
+    return frame_
+
+def run_process_day_data(date, ifo):
+    day_files_ = get_day_files(date, ifo)
+
+    n = len(day_files_.keys())
+    # Manager list to collect DataFrame results
+    with multiprocessing.Manager() as manager:
+        results = manager.list()
+
+        def worker_wrapper(*args):
+            # Call read_data_folder and append its result to the shared list
+            result = read_data_folder(*args)
+            results.append(result)
+
+        # Create processes
+        processes = [
+            multiprocessing.Process(
+                target=worker_wrapper,
+                args=(day_files_, i, i + 2, True)
+            )
+            for i in range(0, n, 2)
+        ]
+
+        # Start all processes
+        [p.start() for p in processes]
+
+        # Wait for all processes to finish
+        [p.join() for p in processes]
+
+        #Convert results (manager.list) back to a Python list
+        frame_concat = []
+        if len(list(results))>0:
+            frame_concat = pd.concat(list(results),  axis=0, ignore_index=True)
+        return frame_concat
