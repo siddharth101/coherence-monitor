@@ -19,7 +19,6 @@ from utils import (
     get_frame_files,
     get_strain_data,
     get_unsafe_channels,
-    plot_max_corr_chan,
     generate_plots
 )
 
@@ -38,7 +37,7 @@ now  = from_gps(tconvert(gpsordate='now'))
 
 
 date = now.strftime('%Y-%m-%d')
-#date = '2024-11-14'
+#date = '2024-11-20'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 date_tomorrow = date_ + timedelta(days=1)
@@ -133,14 +132,16 @@ if times_segs:
 
     channel_path = '/home/siddharth.soni/src/coherence-monitor/channel_files/{}/'.format(ifo)
 
-    df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
-    df_unsafe_chans = get_unsafe_channels(ifo)
+    df_safe = pd.read_csv(channel_path + '{}_safe_channels.csv'.format(ifo))
 
-    logging.info("Total auxiliary channels: {}".format(len(df_all_chans)))
+    # df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
+    # df_unsafe_chans = get_unsafe_channels(ifo)
 
-    df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+    logging.info("Total safe auxiliary channels: {}".format(len(df_safe)))
 
-    logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
+    #df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+
+    #logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
     
     try:
         import time
@@ -155,7 +156,7 @@ if times_segs:
             logging.info("Got h(t) data between {} and {}".format(time_, time_ + dur))
             logging.info(ht_data.duration)
 
-            run_process(df_all_chans, time=time_, ifo=ifo, strain_data=ht_data, dur=dur)
+            run_process(df_safe, time=time_, ifo=ifo, strain_data=ht_data, dur=dur)
 
             tac = time.time()
             logging.info(tac - tic)

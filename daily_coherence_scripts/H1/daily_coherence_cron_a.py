@@ -19,7 +19,6 @@ from utils import (
     get_frame_files,
     get_strain_data,
     get_unsafe_channels,
-    plot_max_corr_chan,
     generate_plots
 )
 
@@ -37,7 +36,7 @@ from datetime import datetime, timedelta
 now  = from_gps(tconvert(gpsordate='now'))
 
 date = now.strftime('%Y-%m-%d')
-#date = '2024-11-11'
+#date = '2024-11-20'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 
@@ -121,7 +120,7 @@ def run_process(channel_df, time, ifo, strain_data, dur):
                 target=get_coherence_chan,
                 args=(channel_df.iloc[i:i + 60]['channel'], time, ifo, strain_data, dur),
             )
-            for i in range(0, 900, 60)
+            for i in range(0, 960, 60)
         ]
 
     [p.start() for p in processes]
@@ -135,15 +134,17 @@ if times_segs:
     logging.info(f"Calculating coherence for {ifo} between {gps_today} and {t1}")
 
     channel_path = '/home/siddharth.soni/src/coherence-monitor/channel_files/{}/'.format(ifo)
+    
+    df_safe = pd.read_csv(channel_path + '{}_safe_channels.csv'.format(ifo))
 
-    df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
-    df_unsafe_chans = get_unsafe_channels(ifo)
+    # df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
+    # df_unsafe_chans = get_unsafe_channels(ifo)
 
-    logging.info("Total auxiliary channels: {}".format(len(df_all_chans)))
+    logging.info("Total safe auxiliary channels: {}".format(len(df_safe)))
 
-    df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+    # df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
 
-    logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
+    #logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
     
     try:
         import time
@@ -158,7 +159,7 @@ if times_segs:
             logging.info("Got h(t) data between {} and {}".format(time_, time_ + dur))
             logging.info(ht_data.duration)
 
-            run_process(df_all_chans, time=time_, ifo=ifo, strain_data=ht_data, dur=dur)
+            run_process(df_safe, time=time_, ifo=ifo, strain_data=ht_data, dur=dur)
 
             tac = time.time()
             logging.info(tac - tic)
