@@ -6,7 +6,7 @@ filename = "H1-O4-standard.ini"
 with open(filename, "r") as file:
     lines = file.readlines()
     
-safe_lines = [line.strip() for line in lines if 'H1:' in line and ' safe' in line]
+safe_lines = [line.strip() for line in lines if 'H1:' in line and ' safe' in line and ' clean' in line]
 unsafe_lines = [line.strip() for line in lines if 'H1:' in line and 'unsafe' in line]
 
 data_safe = []
