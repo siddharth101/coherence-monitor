@@ -6,7 +6,7 @@ ifo = 'L1'
 with open(filename, "r") as file:
     lines = file.readlines()
     
-safe_lines = [line.strip() for line in lines if f'{ifo}:' in line and ' safe' in line and ' clean' in line]
+safe_lines = [line.strip() for line in lines if f'{ifo}:' in line and ' safe' in line and ' glitchy' not in line] 
 unsafe_lines = [line.strip() for line in lines if f'{ifo}:' in line and 'unsafe' in line]
 
 data_safe = []
