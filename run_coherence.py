@@ -48,16 +48,18 @@ times_segs = get_times(seglist=segs_)
 
 channel_path = 'channel_files/{}/'.format(ifo)
 
-df_all_chans = pd.read_csv(
-    channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel']
-)
+df_safe = pd.read_csv(channel_path + '{}_safe_channels.csv'.format(ifo))
 
-df_unsafe_chans = get_unsafe_channels(ifo)
-print("Total auxiliary channels: {}".format(len(df_all_chans)))
+# df_all_chans = pd.read_csv(
+#     channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel']
+# )
 
-df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+# df_unsafe_chans = get_unsafe_channels(ifo)
+print("Total safe auxiliary channels: {}".format(len(df_safe)))
 
-print("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
+# df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
+
+# print("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
 
 
 ht_data = get_strain_data(start_time, end_time, ifo=ifo)
@@ -87,14 +89,18 @@ def get_coherence_chan(channel_list, starttime, endtime, ifo, strain_data):
     return
 
 
-def run_process(channel_df):
+def run_process(channel_df, ifo=ifo):
+    if ifo=='H1':
+        n_chans = 960
+    else:
+        n_chans = 900
     processes = [
             multiprocessing.Process(
                 target=get_coherence_chan,
                 args=(channel_df.iloc[i:i + 60]['channel'], start_time,
                       end_time, ifo, ht_data),
             )
-            for i in range(0, 900, 60)
+            for i in range(0, n_chans, 60)
         ]
 
     [p.start() for p in processes]
@@ -106,7 +112,7 @@ def run_process(channel_df):
 import time
 tic = time.time()
 
-run_process(df_all_chans)
+run_process(df_safe)
 
 tac = time.time()
 print(tac - tic)
