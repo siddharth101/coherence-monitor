@@ -37,7 +37,7 @@ now  = from_gps(tconvert(gpsordate='now'))
 
 
 date = now.strftime('%Y-%m-%d')
-#date = '2024-11-20'
+#date = '2024-12-04'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 date_tomorrow = date_ + timedelta(days=1)
@@ -60,8 +60,8 @@ coh_thresh = 0.1
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 
-savedir_path = os.path.join(savedir, date, str(gps_today), 'data', '')
-logfilepath = os.path.join(savedir, date, str(gps_today), '')
+savedir_path = os.path.join(savedir, date, 'data', '')
+logfilepath = os.path.join(savedir, date, '')
 
 if not os.path.exists(savedir_path):
     os.makedirs(savedir_path)

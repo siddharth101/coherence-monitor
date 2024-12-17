@@ -61,8 +61,8 @@ coh_thresh = 0.1
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 
-savedir_path = os.path.join(savedir, date, str(gps_today), 'data', '')
-logfilepath = os.path.join(savedir, date, str(gps_today), '')
+savedir_path = os.path.join(savedir, date, 'data', '')
+logfilepath = os.path.join(savedir, date, '')
 
 if not os.path.exists(savedir_path):
     os.makedirs(savedir_path)
