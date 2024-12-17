@@ -11,6 +11,7 @@ import os
 import glob
 import plotly.express as px
 import plotly
+import multiprocessing
 
 __author__ = 'Siddharth Soni <siddharth.soni@ligo.org>'
 
@@ -187,50 +188,6 @@ def combine_csv(dir_path, ifo):
     return frame
 
 
-# def find_max_corr_channel(path, fft=10, ifo='L1'):
-#     frame_ = combine_csv(path, ifo)
-#     max_vals = []
-
-#     for i in range(len(frame_)):
-#         max_val_ = frame_.iloc[i, 1::2].sort_values(ascending=False)
-#         chan_names = max_val_.index[:2]
-#         chan_names = [i.replace('_corr', '').replace('.csv','') for i in chan_names]
-#         max_corr_val = [max_val_.iloc[0], max_val_.iloc[1]]
-#         max_vals.append((i / fft, chan_names[0], max_corr_val[0], chan_names[1], max_corr_val[1]))
-
-#     df = pd.DataFrame(max_vals, columns=['frequency', 'channel1', 'coh1', 'channel2', 'coh2'])
-#     return df
-
-
-# def plot_max_corr_chan(path, fft, ifo, flow=0, fhigh=200, plot=True, savedir=None):
-#     time_ = int(path.split('/')[-2])
-#     vals = find_max_corr_channel(path=path, fft=fft, ifo=ifo)
-#     print("Got the data, now making plots")
-#     vals = vals.iloc[flow * fft:fhigh * fft + 1]
-#     vals['group1'] = vals['channel1'].apply(give_group_v2)
-#     vals['group2'] = vals['channel2'].apply(give_group_v2)
-#     vals = vals[(vals['coh1'] <=1) & (vals['coh2']<=1)]
-#     vals.rename(columns={'coh1':'coherence', 'coh2':'Coherence'},  inplace=True)
-
-#     if plot:
-#         fig1 = px.scatter(vals, x="frequency", y="coherence", hover_data=['channel1'], color="group1",
-#                           labels={"max_correlation": "Max Coherence", "frequency": "Frequency [Hz]"})
-#         fig1.update_layout(
-#             title=dict(text=f"Highest Coherence channel at each frequency during {time_} -- {time_ + 900}",
-#                        font=dict(family="Courier New, monospace", size=28, color="RebeccaPurple")))
-
-#         fig2 = px.scatter(vals, x="frequency", y="coherence", hover_data=['channel2'], color="group2",
-#                           labels={"max_correlation": "Max Coherence", "frequency": "Frequency [Hz]"})
-#         fig2.update_layout(
-#             title=dict(text=f"Second highest Coherence channel at each frequency during {time_} -- {time_ + 900}",
-#                        font=dict(family="Cour ier New, monospace", size=28, color="RebeccaPurple")))
-
-#         plotly.offline.plot(fig1, filename=f'{savedir}/channels_coh_{int(time_)}_a.png')
-#         plotly.offline.plot(fig2, filename=f'{savedir}/channels_coh_{int(time_)}_b.png')
-
-#     return vals
-
-
 def check_channel_coherence(channel, ifo, t1, t2, fft=10, overlap=5):
 
     files = get_frame_files(starttime=t1, endtime=t2, ifo=ifo)
@@ -301,9 +258,6 @@ def coherence_above(ifo, date, path=None):
         
     return
             
-    
-    
-    
 def combine_data_files(path):
     
     files = glob.glob(path + '*.csv')
@@ -355,7 +309,7 @@ def generate_plots(date, ifo):
         
     gpstime = to_gps(date).gpsSeconds
     
-    folder_path = os.path.join(pathifo, date, str(gpstime), 'data','')
+    folder_path = os.path.join(pathifo, date, 'data','')
     gps_folders = os.listdir(folder_path)
     
     for folder in gps_folders:
@@ -367,7 +321,7 @@ def generate_plots(date, ifo):
         vals['group'] = vals['channel'].apply(give_group_v2)
         vals.rename(columns={'value':'Coherence', 'freq':'Frequency'},  inplace=True)
         
-        plotdir = os.path.join(pathifo, date, str(gpstime), 'plots', folder,'')
+        plotdir = os.path.join(pathifo, date, 'plots', folder,'')
         os.makedirs(plotdir, exist_ok=True)
         print(plotdir)
         fig1 = px.scatter(vals, x="Frequency", y="Coherence", hover_data=['channel'], color="group",
@@ -381,6 +335,26 @@ def generate_plots(date, ifo):
     
     return
 
+def make_plots(folder, output, ifo):
+
+    folder_time = folder.split('/')[-2]
+    plotdir = output
+    fr = combine_data_files(folder)
+    frmax = get_max_coherence(fr, min_freq=0.0, max_freq=200.0, fft=10)
+    vals = frmax
+    vals['group'] = vals['channel'].apply(give_group_v2)
+    vals.rename(columns={'value':'Coherence', 'freq':'Frequency'},  inplace=True)
+    os.makedirs(plotdir, exist_ok=True)
+    print(plotdir)
+    fig1 = px.scatter(vals, x="Frequency", y="Coherence", hover_data=['channel'], color="group",
+                          labels={"max_correlation": "Max Coherence", "frequency": "Frequency [Hz]"})
+
+    fig1.update_layout(title=dict(text=f"{ifo}: Highest Coherence channel at each frequency during {folder_time} -- {str(int(folder_time) + 1024)}",font=dict(family="Courier New, monospace", size=22, color="RebeccaPurple")))
+    plotly.offline.plot(fig1, filename=f'{plotdir}channels_coh_{int(folder_time)}.png')
+
+    return
+
+
 
 ### Utilities to read data for any given date
 
@@ -393,7 +367,7 @@ def get_day_files(date, ifo):
     else:
         pathifo = '/home/siddharth.soni/public_html/coherence_monitor/L1/'
 
-    folder_path = os.path.join(pathifo, date, str(gpstime), 'data','')
+    folder_path = os.path.join(pathifo, date, 'data','')
     gps_folders = os.listdir(folder_path)
 
     files_folders = {}
