@@ -12,6 +12,7 @@ import glob
 import plotly.express as px
 import plotly
 import multiprocessing
+import concurrent.futures
 
 __author__ = 'Siddharth Soni <siddharth.soni@ligo.org>'
 
@@ -32,7 +33,7 @@ def get_frame_files(starttime, endtime, ifo, host=None):
         files = gwdatafind.find_urls(f'{site_}', f'{ifo}_R', starttime, endtime, host)
     else:
         files = gwdatafind.find_urls(f'{site_}', f'{ifo}_R', starttime, endtime)
-        
+
     return sorted(files)
 
 
@@ -51,8 +52,6 @@ def get_observing_segs(t1, t2, ifo):
         if seg.end - seg.start > 3600:
             seg_list.append(seg)
 
-    # if seg_list:
-    #     print("Got the segments")
     return seg_list
 
 
@@ -61,15 +60,22 @@ def get_times(seglist, duration=3600):
     return [item for sublist in times for item in sublist]
 
 
-def calc_coherence(channel2, start_time, end_time, fft, overlap, strain_data, frame_file=None,
-                   channel1=None):
+def calc_coherence(
+    channel2,
+    start_time,
+    end_time,
+    fft,
+    overlap,
+    strain_data,
+    frame_file=None,
+    channel1=None
+):
     t1 = to_gps(start_time)
     t2 = to_gps(end_time)
     if frame_file:
         ts2 = TimeSeries.read(frame_file, channel=channel2, start=t1, end=t2)
     else:
         ts2 = TimeSeries.fetch(channel2, start=t1, end=t2)
-        
 
     if channel1:
         ts1 = TimeSeries.fetch(channel1, t1, t2)
@@ -88,11 +94,17 @@ def calc_coherence(channel2, start_time, end_time, fft, overlap, strain_data, fr
     return coh
 
 
-
-import concurrent.futures
-
-
-def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, savedir, coh_thresh, ifo='L1', timeout=30):
+def run_coherence(
+    channel_list, 
+    frame_files, 
+    starttime, 
+    endtime, 
+    strain_data, 
+    savedir, 
+    coh_thresh, 
+    ifo='L1', 
+    timeout=30
+):
     t1, t2 = to_gps(starttime), to_gps(endtime)
     savedir = os.path.join(savedir, f'{t1}', '')
 
@@ -102,9 +114,17 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
 
     for channel in channel_list:
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(calc_coherence, strain_data=strain_data, channel1=None,
-                                     channel2=channel, frame_file=frame_files,
-                                     start_time=t1, end_time=t2, fft=10, overlap=5)
+            future = executor.submit(
+                calc_coherence,
+                strain_data=strain_data,
+                channel1=None,
+                channel2=channel,
+                frame_file=frame_files,
+                start_time=t1,
+                end_time=t2,
+                fft=10,
+                overlap=5,
+            )
 
             try:
                 coh = future.result(timeout=timeout)
@@ -115,7 +135,6 @@ def run_coherence(channel_list, frame_files, starttime, endtime, strain_data, sa
             except concurrent.futures.TimeoutError:
                 print(f"Calculation for channel {channel} timed out.")
                 continue
-
 
 def get_max_corr(output_dir, save=False):
     files = glob.glob(f'{output_dir}*.csv')
