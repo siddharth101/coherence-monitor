@@ -137,14 +137,7 @@ if times_segs:
     
     df_safe = pd.read_csv(channel_path + '{}_safe_channels.csv'.format(ifo))
 
-    # df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
-    # df_unsafe_chans = get_unsafe_channels(ifo)
-
     logging.info("Total safe auxiliary channels: {}".format(len(df_safe)))
-
-    # df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
-
-    #logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
     
     try:
         import time
