@@ -9,6 +9,7 @@ import pandas as pd
 import logging
 from gwpy.timeseries import TimeSeries
 import sys
+import shutil
 sys.path.append('/home/siddharth.soni/src/coherence-monitor/')
 from utils import (
     get_observing_segs,
@@ -36,7 +37,7 @@ from datetime import datetime, timedelta
 now  = from_gps(tconvert(gpsordate='now'))
 
 date = now.strftime('%Y-%m-%d')
-#date = '2024-11-20'
+#date = '2025-01-04'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 date_yesterday = date_ + timedelta(days=-1)
@@ -165,21 +166,15 @@ if times_segs:
 
         logging.info("Analysis done now, making plots")
         generate_plots(date_yesterday_, ifo=ifo)
+        try:
+            path_plots = os.path.join(savedir, date_yesterday_, 'plots', '')
+            plot_path = f'/home/siddharth.soni/public_html/coherence_monitor/plots/{ifo}/{date_yesterday_}'
+            os.makedirs(plot_path, exist_ok=True)
+            shutil.copytree(path_plots,plot_path, 
+                            dirs_exist_ok=True)
+        except FileNotFoundError:
+            pass
 
-#         path_outdir = os.path.join(savedir, date, str(gps_today), 'plots', '')
-#         if not os.path.exists(path_outdir):
-#             os.makedirs(path_outdir)
-
-#         #dirs_path = savedir_path #os.path.join(savedir, date1, 'data', '')
-#         logging.info(savedir_path)
-
-#         for filepath in os.listdir(savedir_path):
-#             path_ = os.path.join(savedir_path, filepath, '')
-#             logging.info(path_)
-#             t = path_.split('/')[-2]
-#             savedir_plots = os.path.join(path_outdir, t, '')
-#             os.makedirs(savedir_plots, exist_ok=True)
-#             plot_max_corr_chan(path=path_, ifo=ifo, fft=10, savedir=savedir_plots)
     except Exception as e:
         logging.error(f"An error occurred: {e}")   
         
