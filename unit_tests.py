@@ -32,7 +32,7 @@ for i in range(nfiles):
     df["channel"] = channame
     if len(df) > 0:
         li.append(df)
-frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(li, axis=0, ignore_index=True)
 
 # Combine using utility function
 fr = combine_data_files(folder_path)
