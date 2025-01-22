@@ -1,3 +1,4 @@
+import os
 import pytest
 import unittest
 import pandas as pd
@@ -8,11 +9,13 @@ from pandas.testing import assert_frame_equal
 
 print("Imports done")
 segsl = SegmentList([Segment(1421395218.0, 1421400618.0)]) 
-segl_ = get_observing_segs(t1='2025-01-20 08:00:00', t2='2025-01-20 09:30:00', ifo='L1')
+tstart = '2025-01-20 08:00:00'
+tend = '2025-01-20 09:30:00'
+segl_ = get_observing_segs(t1=tstart, t2=tend, ifo='L1')
 
 
-
-folder_path = '/home/siddharth.soni/public_html/coherence_monitor/L1/2025-01-05/data/1420070718/'
+base_path = '/home/siddharth.soni/public_html/coherence_monitor'
+folder_path = os.path.join(base_path, 'L1/2025-01-05/data/1420070718/')
 files_ = glob.glob(folder_path + "*.csv")
 nfiles = len(files_)
 li = []
@@ -27,7 +30,7 @@ for i in range(nfiles):
             li.append(df)
     frame = pd.concat(li, axis=0, ignore_index=True)
 
-fr = combine_data_files('/home/siddharth.soni/public_html/coherence_monitor/L1/2025-01-05/data/1420070718/')
+fr = combine_data_files(folder_path)
 print("Data prepared")
 def assert_dataframes_equal(test_case, df1, df2):
     try:
