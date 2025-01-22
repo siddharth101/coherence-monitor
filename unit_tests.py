@@ -3,7 +3,7 @@ import glob
 import pandas as pd
 import unittest
 from pandas.testing import assert_frame_equal
-from utils import get_observing_segs, combine_data_files
+from utils import combine_data_files
 from gwpy.segments import Segment, SegmentList
 
 print("Imports done")
