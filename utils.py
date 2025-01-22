@@ -195,12 +195,12 @@ def combine_csv(dir_path, ifo):
     chan_removes = get_unsafe_channels(ifo=ifo)["channel"]
 
     for j in chan_removes:
-        all_files = [i for i in all_files if not i.startswith(f"{dir_path}{j}")]
+        all_file = [i for i in all_files if not i.startswith(f"{dir_path}{j}")]
 
     li = []
     fns = []
 
-    for filename in all_files:
+    for filename in all_file:
         fn = filename.split("/")[-1].split("_14")[0] + "_freq"
         fn_val = filename.split("/")[-1].split("_14")[0] + "_corr"
         fns.append(fn)
@@ -261,10 +261,10 @@ def freq_masks(df):
 def coherence_above(ifo, date, path=None):
 
     gpstime = to_gps(date)
+    # Define the path if not provided
+    basepath = "home/siddharth.soni/public_html/coherence_monitor/"
     if path is None:
-        path = f"/home/siddharth.soni/public_html/coherence_monitor/{ifo}/{date}/{gpstime}/data/"
-    else:
-        path = path
+        path = os.path.join(basepath, f"{ifo}/{date}/{gpstime}/data/")
     times = [os.path.join(path, i, "") for i in os.listdir(path)]
 
     if not times:
@@ -329,7 +329,7 @@ def get_max_coherence(dataframe, min_freq=0.0, max_freq=100.0, fft=10):
                 .iloc[0]
             )
             limaxdf.append(dfmax)
-        except:
+        except Exception:
             pass
 
     frame_limaxdf = pd.concat(limaxdf, axis=1, ignore_index=True).T
@@ -338,57 +338,83 @@ def get_max_coherence(dataframe, min_freq=0.0, max_freq=100.0, fft=10):
 
 
 def generate_plots(date, ifo):
+    """
+    Generate coherence plots for a given date and IFO.
 
-    if ifo == "L1":
-        pathifo = "/home/siddharth.soni/public_html/coherence_monitor/L1/"
-    else:
-        pathifo = "/home/siddharth.soni/public_html/coherence_monitor/H1/"
+    Parameters:
+    - date: str, the date for which plots are generated
+    - ifo: str, interferometer ("L1" or "H1")
 
-    gpstime = to_gps(date).gpsSeconds
+    Returns:
+    - None
+    """
+    # Define the base path for the IFO
+    base_path = "/home/siddharth.soni/public_html/coherence_monitor/"
+    pathifo = os.path.join(base_path, ifo)
 
-    folder_path = os.path.join(pathifo, date, "data", "")
+    # Define the folder path containing data
+    folder_path = os.path.join(pathifo, date, "data")
     gps_folders = os.listdir(folder_path)
 
     for folder in gps_folders:
-        gps_folder_path = os.path.join(folder_path, folder, "")
+        gps_folder_path = os.path.join(folder_path, folder)
         print(gps_folder_path)
+
+        # Process data files and compute max coherence
         fr = combine_data_files(gps_folder_path)
         frmax = get_max_coherence(fr, min_freq=0.0, max_freq=200.0, fft=10)
         vals = frmax
         vals["group"] = vals["channel"].apply(give_group_v2)
-        vals.rename(columns={"value": "Coherence", "freq": "Frequency"},
-                    inplace=True)
+        vals.rename(
+            columns={"value": "Coherence", "freq": "Frequency"},
+            inplace=True,
+        )
 
-        plotdir = os.path.join(pathifo, date, "plots", folder, "")
+        # Define the plot directory
+        plotdir = os.path.join(pathifo, date, "plots", folder)
         os.makedirs(plotdir, exist_ok=True)
         print(plotdir)
+
+        # Create the scatter plot
         fig1 = px.scatter(
             vals,
             x="Frequency",
             y="Coherence",
             hover_data=["channel"],
             color="group",
-            labels={"max_correlation": "Max Coherence", "frequency":
-                    "Frequency [Hz]"},
+            labels={
+                "max_correlation": "Max Coherence",
+                "frequency": "Frequency [Hz]",
+            },
         )
 
+        # Update the plot layout
         fig1.update_layout(
             title=dict(
-                text=f"{ifo}: Highest Coherence channel at each frequency during {folder} -- {str(int(folder) + 1024)}",
+                text=(
+                    f"{ifo}: Highest Coherence channel at each frequency "
+                    f"during {folder} -- {str(int(folder) + 1024)}"
+                ),
                 font=dict(
-                    family="Courier New, monospace", size=22,
-                    color="RebeccaPurple"
+                    family="Courier New, monospace",
+                    size=22,
+                    color="RebeccaPurple",
                 ),
             )
         )
-        plotly.offline.plot(fig1, filename=f"{plotdir}channels_coh_{int(folder)}.png")
+
+        # Save the plot
+        plotly.offline.plot(
+            fig1,
+            filename=os.path.join(plotdir, f"channels_coh_{int(folder)}.png"),
+        )
 
     return
 
 
 def make_plots(folder, output, ifo):
 
-    folder_time = folder.split("/")[-2]
+    folder_t = folder.split("/")[-2]
     plotdir = output
     fr = combine_data_files(folder)
     frmax = get_max_coherence(fr, min_freq=0.0, max_freq=200.0, fft=10)
@@ -409,13 +435,22 @@ def make_plots(folder, output, ifo):
     )
 
     fig1.update_layout(
-        title=dict(
-            text=f"{ifo}: Highest Coherence channel at each frequency during {folder_time} -- {str(int(folder_time) + 1024)}",
-            font=dict(family="Courier New, monospace", size=22,
-                      color="RebeccaPurple"),
+       title=dict(
+                text=(
+                    f"{ifo}: Highest Coherence channel at each frequency "
+                    f"during {folder} -- {str(int(folder) + 1024)}"
+                ),
+                font=dict(
+                    family="Courier New, monospace",
+                    size=22,
+                    color="RebeccaPurple",
+                ),
+            )
         )
-    )
-    plotly.offline.plot(fig1, filename=f"{plotdir}channels_coh_{int(folder_time)}.png")
+    plotly.offline.plot(
+                        fig1,
+                        filename=f"{plotdir}channels_coh_{int(folder_t)}.png"
+                        )
 
     return
 
@@ -424,8 +459,6 @@ def make_plots(folder, output, ifo):
 
 
 def get_day_files(date, ifo):
-
-    gpstime = to_gps(date).gpsSeconds
 
     if ifo == "H1":
         pathifo = "/home/siddharth.soni/public_html/coherence_monitor/H1/"
