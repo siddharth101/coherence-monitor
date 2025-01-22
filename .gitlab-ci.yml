@@ -5,9 +5,10 @@ stages:
 build:
   stage: build
   image: python:3.11-slim-bullseye
+  before_script:
+    - apt-get update && apt-get install -y build-essential gcc  # Install GCC and build tools
+    - pip install --upgrade pip setuptools wheel               # Upgrade pip tools
   script:
-    - sudo apt update
-    - sudo apt install build-essential
     - pip install pytest
     - pip install ligo-segments
     - pip install -r requirements.txt
