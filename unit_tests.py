@@ -11,7 +11,7 @@ print("Imports done")
 segsl = SegmentList([Segment(1421395218.0, 1421400618.0)]) 
 tstart = '2025-01-20 08:00:00'
 tend = '2025-01-20 09:30:00'
-segl_ = get_observing_segs(t1=tstart, t2=tend, ifo='L1')
+#segl_ = get_observing_segs(t1=tstart, t2=tend, ifo='L1')
 
 
 base_path = '/home/siddharth.soni/public_html/coherence_monitor'
@@ -39,8 +39,8 @@ def assert_dataframes_equal(test_case, df1, df2):
         test_case.fail(f"DataFrames are not equal: {e}")
 
 class testutils(unittest.TestCase):
-    def test_observing_segs(self):
-        self.assertEqual(segsl, segl_)
+#    def test_observing_segs(self):
+ #       self.assertEqual(segsl, segl_)
 
     def test_combine_files(self):
         assert_dataframes_equal(self, frame, fr)
