@@ -7,6 +7,8 @@ build:
   image: python:3.11-slim-bullseye
   script:
     - pip install pytest
+    - pip install ligo-segments
+    - pip install -r requirements.txt
     - pytest -v unit_tests.py
 
 flake8:
