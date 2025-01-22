@@ -19,6 +19,7 @@ folder_path = os.path.join(base_path, 'L1/2025-01-05/data/1420070718/')
 files_ = glob.glob(folder_path + "*.csv")
 nfiles = len(files_)
 li = []
+frame = pd.DataFrame()
 for i in range(nfiles):
     file = files_[i]
     channame = file.split(".csv")[-2].split("/")[-1]
