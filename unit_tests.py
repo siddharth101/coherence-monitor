@@ -2,8 +2,9 @@ import os
 import glob
 import pandas as pd
 import unittest
+import numpy as np
 from pandas.testing import assert_frame_equal
-from utils import combine_data_files
+from utils import combine_data_files, get_times
 from gwpy.segments import Segment, SegmentList
 
 print("Imports done")
@@ -38,6 +39,13 @@ for i in range(nfiles):
 fr = combine_data_files(folder_path)
 print("Data prepared")
 
+segl = SegmentList()
+seg = Segment(1421625618, 1421638618)
+segl.append(seg)
+times = [np.arange(i.start, i.end - 3600, 3600) for i in segl]
+times = [item for sublist in times for item in sublist]
+times_ = get_times(seglist=segl)
+
 
 # Utility function for comparing DataFrames
 def assert_dataframes_equal(test_case, df1, df2):
@@ -55,6 +63,9 @@ class TestUtils(unittest.TestCase):
 
     def test_combine_files(self):
         assert_dataframes_equal(self, frame, fr)
+
+    def test_get_times(self):
+        self.assertEqual(times, times_)
 
 
 if __name__ == '__main__':
