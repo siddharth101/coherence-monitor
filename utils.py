@@ -298,6 +298,7 @@ def combine_data_files(path):
     if nfiles == 0:  # If no files are found
         return pd.DataFrame()  # Return an empty DataFrame
     li = []
+    frame = pd.DataFrame()
     for i in range(nfiles):
         file = files[i]
         channame = file.split(".csv")[-2].split("/")[-1]
@@ -308,7 +309,7 @@ def combine_data_files(path):
         if len(df) > 0:
             li.append(df)
 
-        frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(li, axis=0, ignore_index=True)
 
     return frame
 
@@ -357,7 +358,7 @@ def generate_plots(date, ifo):
     gps_folders = os.listdir(folder_path)
 
     for folder in gps_folders:
-        gps_folder_path = os.path.join(folder_path, folder)
+        gps_folder_path = os.path.join(folder_path, folder, '')
         print(gps_folder_path)
 
         # Process data files and compute max coherence
