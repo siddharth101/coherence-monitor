@@ -38,7 +38,7 @@ now  = from_gps(tconvert(gpsordate='now'))
 
 
 date = now.strftime('%Y-%m-%d')
-#date = '2025-01-16'
+#date = '2025-02-03'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 date_tomorrow = date_ + timedelta(days=1)
@@ -135,15 +135,8 @@ if times_segs:
     channel_path = '/home/siddharth.soni/src/coherence-monitor/channel_files/{}/'.format(ifo)
 
     df_safe = pd.read_csv(channel_path + '{}_safe_channels.csv'.format(ifo))
-
-    # df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
-    # df_unsafe_chans = get_unsafe_channels(ifo)
-
+    
     logging.info("Total safe auxiliary channels: {}".format(len(df_safe)))
-
-    #df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
-
-    #logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
     
     try:
         import time
@@ -173,6 +166,13 @@ if times_segs:
                             dirs_exist_ok=True)
         except FileNotFoundError:
             pass
+        try:
+            base_dir = "/home/siddharth.soni/public_html/coherence_monitor/plots/" 
+            year_dict_ = {'2024':[11, 12], '2025':[1,2]}
+            generate_calendar_with_links_for_years(base_dir, year_dict_, 'L1')
+        except Exception as e:
+            pass
+
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")   

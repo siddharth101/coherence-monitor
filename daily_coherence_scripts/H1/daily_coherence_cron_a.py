@@ -37,7 +37,7 @@ from datetime import datetime, timedelta
 now  = from_gps(tconvert(gpsordate='now'))
 
 date = now.strftime('%Y-%m-%d')
-#date = '2025-01-04'
+#date = '2025-02-04'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 

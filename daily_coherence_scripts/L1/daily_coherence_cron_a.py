@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import logging
 from gwpy.timeseries import TimeSeries
+#from calendar import generate_calendar_with_links_for_years
 import sys
 import shutil
 sys.path.append('/home/siddharth.soni/src/coherence-monitor/')
@@ -38,7 +39,7 @@ now  = from_gps(tconvert(gpsordate='now'))
 
 
 date = now.strftime('%Y-%m-%d')
-#date = '2025-01-16'
+#date = '2025-02-07'
 
 date_ = datetime.strptime(date, '%Y-%m-%d')
 date_tomorrow = date_ + timedelta(days=1)
@@ -129,20 +130,13 @@ def run_process(channel_df, time, ifo, strain_data, dur):
 if times_segs:
 
     logging.info(f"Running the coherence monitor on {date} for {ifo}")
-    #logging.info(f"Calculating coherence for {ifo} between {gps_today} and {t1}")
+    logging.info(f"Calculating coherence for {ifo} between {gps_today} and {t1}")
 
     channel_path = '/home/siddharth.soni/src/coherence-monitor/channel_files/{}/'.format(ifo)
 
     df_safe = pd.read_csv(channel_path + '{}_safe_channels.csv'.format(ifo))
 
-    # df_all_chans = pd.read_csv(channel_path + '{}_all_chans.csv'.format(ifo), header=None, names=['channel'])
-    # df_unsafe_chans = get_unsafe_channels(ifo)
-
     logging.info("Total safe auxiliary channels: {}".format(len(df_safe)))
-
-    #df_all_chans = df_all_chans[~df_all_chans['channel'].isin(df_unsafe_chans['channel'])]
-
-    #logging.info("Total auxiliary channels after removing unsafe channels: {}".format(len(df_all_chans)))
     
     try:
         import time
@@ -171,6 +165,12 @@ if times_segs:
             shutil.copytree(path_plots,plot_path, 
                             dirs_exist_ok=True)
         except FileNotFoundError:
+            pass
+        try:
+            base_dir = "/home/siddharth.soni/public_html/coherence_monitor/plots/" 
+            year_dict_ = {'2024':[11, 12], '2025':[1,2]}
+            generate_calendar_with_links_for_years(base_dir, year_dict_, 'L1')
+        except Exception as e:
             pass
 
     except Exception as e:
