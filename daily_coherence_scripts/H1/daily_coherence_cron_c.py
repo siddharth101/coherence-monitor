@@ -165,6 +165,13 @@ if times_segs:
                             dirs_exist_ok=True)
         except FileNotFoundError:
             pass
+        try:
+            from utils import generate_calendar_with_links_for_years
+            base_dir = "/home/siddharth.soni/public_html/coherence_monitor/plots/" 
+            year_dict_ = {'2024':[11, 12], '2025':[1,2]}
+            generate_calendar_with_links_for_years(base_dir, year_dict_, 'H1')
+        except Exception as e:
+            pass
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")   
