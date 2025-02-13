@@ -362,53 +362,56 @@ def generate_plots(date, ifo):
         print(gps_folder_path)
 
         # Process data files and compute max coherence
-        fr = combine_data_files(gps_folder_path)
-        frmax = get_max_coherence(fr, min_freq=0.0, max_freq=200.0, fft=10)
-        vals = frmax
-        vals["group"] = vals["channel"].apply(give_group_v2)
-        vals.rename(
-            columns={"value": "Coherence", "freq": "Frequency"},
-            inplace=True,
-        )
-
-        # Define the plot directory
-        plotdir = os.path.join(pathifo, date, "plots", folder)
-        os.makedirs(plotdir, exist_ok=True)
-        print(plotdir)
-
-        # Create the scatter plot
-        fig1 = px.scatter(
-            vals,
-            x="Frequency",
-            y="Coherence",
-            hover_data=["channel"],
-            color="group",
-            labels={
-                "max_correlation": "Max Coherence",
-                "frequency": "Frequency [Hz]",
-            },
-        )
-
-        # Update the plot layout
-        fig1.update_layout(
-            title=dict(
-                text=(
-                    f"{ifo}: Highest Coherence channel at each frequency "
-                    f"during {folder} -- {str(int(folder) + 1024)}"
-                ),
-                font=dict(
-                    family="Courier New, monospace",
-                    size=22,
-                    color="RebeccaPurple",
-                ),
+        try:
+            fr = combine_data_files(gps_folder_path)
+            frmax = get_max_coherence(fr, min_freq=0.0, max_freq=200.0, fft=10)
+            vals = frmax
+            vals["group"] = vals["channel"].apply(give_group_v2)
+            vals.rename(
+                columns={"value": "Coherence", "freq": "Frequency"},
+                inplace=True,
             )
-        )
 
-        # Save the plot
-        plotly.offline.plot(
-            fig1,
-            filename=os.path.join(plotdir, f"channels_coh_{int(folder)}.png"),
-        )
+            # Define the plot directory
+            plotdir = os.path.join(pathifo, date, "plots", folder)
+            os.makedirs(plotdir, exist_ok=True)
+            print(plotdir)
+
+            # Create the scatter plot
+            fig1 = px.scatter(
+                vals,
+                x="Frequency",
+                y="Coherence",
+                hover_data=["channel"],
+                color="group",
+                labels={
+                    "max_correlation": "Max Coherence",
+                    "frequency": "Frequency [Hz]",
+                },
+            )
+
+            # Update the plot layout
+            fig1.update_layout(
+                title=dict(
+                    text=(
+                        f"{ifo}: Highest Coherence channel at each frequency "
+                        f"during {folder} -- {str(int(folder) + 1024)}"
+                    ),
+                    font=dict(
+                        family="Courier New, monospace",
+                        size=22,
+                        color="RebeccaPurple",
+                    ),
+                )
+            )
+
+            # Save the plot
+            plotly.offline.plot(
+                fig1,
+                filename=os.path.join(plotdir, f"channels_coh_{int(folder)}.png"),
+            )
+        except Exception as e:
+            pass
 
     return
 
@@ -574,3 +577,210 @@ def run_process_day_data(date, ifo):
         if len(list(results)) > 0:
             frame_concat = pd.concat(list(results), axis=0, ignore_index=True)
         return frame_concat
+
+
+
+
+import os
+import calendar
+from datetime import datetime
+from gwpy.time import to_gps, from_gps
+
+def generate_calendar_with_links_for_years(base_dir, year_dict, ifo):
+    base_dir = os.path.join(base_dir, ifo, '')
+    title = 'CohMon Plots'
+
+    if ifo == 'L1':
+        date_color = 'dodgerblue'
+        link_color = 'cornflowerblue'
+    else:
+        date_color = 'tomato'
+        link_color = 'salmon'
+
+    # Start HTML content
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Calendar</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }}
+            .calendar {{
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }}
+            .month {{
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                text-align: center;
+            }}
+            th, td {{
+                border: 1px solid #ddd;
+                padding: 8px;
+            }}
+            th {{
+                background-color: #f4f4f4;
+            }}
+            td {{
+                height: 50px;
+                vertical-align: top;
+                position: relative;
+            }}
+            .day {{
+                font-weight: bold;
+            }}
+            .link {{
+                text-decoration: none;
+                color: {date_color};
+                cursor: pointer;
+            }}
+            .link:hover {{
+                text-decoration: underline;
+            }}
+            .time-links {{
+                display: none;
+                position: absolute;
+                top: 50px;
+                left: 0;
+                background-color: white;
+                border: 1px solid #ddd;
+                padding: 10px;
+                z-index: 10;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }}
+            .time-links a {{
+                display: block;
+                color: {link_color};
+                margin-bottom: 5px;
+            }}
+            .time-links a:hover {{
+                text-decoration: underline;
+            }}
+        </style>
+        <script>
+            function toggleVisibility(dateId) {{
+                const timeLinks = document.querySelectorAll('.time-links');
+                timeLinks.forEach(link => {{
+                    if (link.id !== dateId) {{
+                        link.style.display = "none";
+                    }}
+                }});
+                const element = document.getElementById(dateId);
+                if (element.style.display === "none" || element.style.display === "") {{
+                    element.style.display = "block";
+                }} else {{
+                    element.style.display = "none";
+                }}
+            }}
+        </script>
+    </head>
+    <body>
+        <h1>{ifo} {title}</h1>
+        <div class="calendar">
+    """
+    #year_dict = {'2024':[11, 12], '2025':[1]}
+    # Generate calendar content for each year
+    for year_ in year_dict.keys():
+        year = int(year_)
+        html_content += f"<h2>Year: {year}</h2>"
+        existing_folders = set(os.listdir(base_dir))
+        
+        for month in year_dict[str(year)]:
+            #year = int(year_)
+            print(year, month)
+            print(type(year), type(month))
+            month_name = calendar.month_name[month]
+            _, num_days = calendar.monthrange(year, month)
+
+            # Start a month container
+            html_content += f"""
+            <div class="month">
+                <h2>{month_name}</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sun</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            """
+
+            # Generate days in calendar format
+            cal = calendar.Calendar()
+            month_days = cal.monthdayscalendar(year, month)
+            for week in month_days:
+                html_content += "<tr>"
+                for day in week:
+                    if day == 0:
+                        html_content += "<td></td>"
+                    else:
+                        folder_name = f"{year}-{month:02d}-{day:02d}"
+                        if folder_name in existing_folders:
+                            time_folders_html = ""
+                            time_folder_path = os.path.join(base_dir, folder_name)
+                            if os.path.isdir(time_folder_path):
+                                for time_folder in sorted(os.listdir(time_folder_path)):
+                                    time_folder_full_path = os.path.join(
+                                        time_folder_path, time_folder
+                                    )
+                                    if os.path.isdir(time_folder_full_path) and time_folder.isdigit():
+                                        timestamp = int(time_folder)
+                                        time_str = from_gps(timestamp).strftime("%H:%M")
+                                        files = os.listdir(time_folder_full_path)
+                                        if files:
+                                            file_full_path = files[0]
+                                            time_folders_html += f'<a href="{folder_name}/{time_folder}/{file_full_path}" class="link">{time_str}</a>'
+
+                            html_content += f"""
+                                <td>
+                                    <div>
+                                        <a class="link" onclick="toggleVisibility('{folder_name}')">{day}</a>
+                                    </div>
+                                    <div id="{folder_name}" class="time-links">
+                                        {time_folders_html}
+                                    </div>
+                                </td>
+                            """
+                        else:
+                            html_content += f"<td>{day}</td>"
+                html_content += "</tr>"
+
+            # Close the month container
+            html_content += """
+                    </tbody>
+                </table>
+            </div>
+            """
+
+        # End HTML content
+        html_content += """
+            </div>
+        </body>
+        </html>
+        """
+
+    # Save to file
+    output_path = os.path.join(base_dir, "calendar_combined.html")
+    with open(output_path, "w") as file:
+        file.write(html_content)
+
+    print(f"Combined calendar HTML file created: {output_path}")
+    
+    return
+
