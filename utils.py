@@ -579,6 +579,84 @@ def run_process_day_data(date, ifo):
         return frame_concat
 
 
+### Utilities to calculate the daily average and plot them
+def daily_average(date, ifo,):
+
+    if ifo == "H1":
+        pathifo = "/home/siddharth.soni/public_html/coherence_monitor/H1/"
+    else:
+        pathifo = "/home/siddharth.soni/public_html/coherence_monitor/L1/"
+
+    folder_path = os.path.join(pathifo, date, "")
+
+    frame = run_process_day_data(ifo=ifo, date=date)
+    try:
+        frame = frame[frame.frequency<=200]
+
+        frequencies = frame.frequency.unique()
+
+
+        vals = []
+        for i in frequencies:
+            mean = round(frame[frame.frequency==i]['coherence'].mean(),2)
+            most_freq_channel = frame[frame.frequency==i]['channel'].value_counts().index[0]
+            vals.append((round(i,1),mean, most_freq_channel, date))
+
+        if len(vals)>0:
+            df = pd.DataFrame(vals, columns=['frequency', 'mean_coh', 'channel', 'date'])
+            df.sort_values(by='frequency', inplace=True)
+            df.reset_index(drop=True, inplace=True)
+            df.to_csv(folder_path+'mean_coherence.csv', index=None)
+            return df
+    except Exception as e:
+        pass
+
+    return
+
+
+def make_plot_meancoh(date, ifo):
+
+    if ifo == "H1":
+        pathifo = "/home/siddharth.soni/public_html/coherence_monitor/H1/"
+    else:
+        pathifo = "/home/siddharth.soni/public_html/coherence_monitor/L1/"
+
+    folder_path = os.path.join(pathifo, date, "")
+    vals = pd.read_csv(folder_path + 'mean_coherence.csv')
+    vals["group"] = vals["channel"].apply(give_group_v2)
+
+    fig1 = px.scatter(
+        vals,
+        x="frequency",
+        y="mean_coh",
+        hover_data=["channel"],
+        color="group",
+        labels={"mean_coh": "Mean Coherence", "frequency":
+                "Frequency [Hz]"},
+    )
+
+    fig1.update_layout(
+       title=dict(
+                text=(
+                    f"{ifo}: Mean Coherence at each frequency "
+                    f" on {date}"
+                ),
+                font=dict(
+                    family="Courier New, monospace",
+                    size=22,
+                    color="RebeccaPurple",
+                ),
+        ),
+        yaxis_range = [0,1])
+    plotly.offline.plot(
+                        fig1,
+                        filename=f"{folder_path}mean_coh.png"
+                        )
+
+    return
+
+
+
 
 
 import os
