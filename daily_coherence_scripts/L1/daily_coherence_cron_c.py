@@ -178,6 +178,13 @@ if times_segs:
             generate_calendar_with_links_for_years(base_dir, year_dict_, 'L1')
         except Exception as e:
             pass
+        
+        try:
+            from utils import daily_average, make_plot_meancoh
+            daily_average(i, ifo='L1')
+            make_plot_meancoh(i, ifo='L1')
+        except Exception as e:
+            pass
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")   
